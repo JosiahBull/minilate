@@ -35,7 +35,7 @@ handle_error() {
 trap handle_error ERR
 
 echo -e "\n${GREEN}Running Minilate test suite...${NC}"
-cargo test --all-features
+cargo test --all-features --all-targets
 
 echo -e "\n${GREEN}All tests passed successfully!${NC}"
 echo -e "${YELLOW}For more detailed output, run:${NC}"

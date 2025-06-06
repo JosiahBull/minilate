@@ -27,6 +27,10 @@ echo -e "${BLUE}=======================================================${NC}"
 echo -e "${BLUE}         Minilate Benchmarking Script                  ${NC}"
 echo -e "${BLUE}=======================================================${NC}"
 
+# Cleanup any old build files
+echo -e "\n${GREEN}Cleaning up old build files...${NC}"
+cargo clean
+
 # Build all benchmarks with release optimizations
 echo -e "\n${GREEN}Building benchmarks with release optimizations...${NC}"
 cargo build --profile bench --bench bench_minilate
@@ -126,7 +130,7 @@ MINILATE_TIME=$(extract_time "$MINILATE_RESULT")
 HANDLEBARS_TIME=$(extract_time "$HANDLEBARS_RESULT")
 MINIJINJA_TIME=$(extract_time "$MINIJINJA_RESULT")
 
-# Calculate relative performance (using Minilate as baseline)
+# Calculate relative performance and size (using Minilate as baseline)
 if [[ "$MINILATE_TIME" != "0" && "$HANDLEBARS_TIME" != "0" && "$MINIJINJA_TIME" != "0" ]]; then
     MINILATE_RELATIVE="1.00x"
     HANDLEBARS_RELATIVE=$(printf "%.2fx" "$(echo "scale=4; $HANDLEBARS_TIME / $MINILATE_TIME" | bc)")
@@ -135,6 +139,17 @@ else
     MINILATE_RELATIVE="N/A"
     HANDLEBARS_RELATIVE="N/A"
     MINIJINJA_RELATIVE="N/A"
+fi
+
+# Calculate relative size (using Minilate as baseline)
+if [[ "$MINILATE_SIZE" != "0" && "$HANDLEBARS_SIZE" != "0" && "$MINIJINJA_SIZE" != "0" ]]; then
+    MINILATE_SIZE_RELATIVE="1.00x"
+    HANDLEBARS_SIZE_RELATIVE=$(printf "%.2fx" "$(echo "scale=4; $HANDLEBARS_SIZE / $MINILATE_SIZE" | bc)")
+    MINIJINJA_SIZE_RELATIVE=$(printf "%.2fx" "$(echo "scale=4; $MINIJINJA_SIZE / $MINILATE_SIZE" | bc)")
+else
+    MINILATE_SIZE_RELATIVE="N/A"
+    HANDLEBARS_SIZE_RELATIVE="N/A"
+    MINIJINJA_SIZE_RELATIVE="N/A"
 fi
 
 # Format times for display
@@ -173,25 +188,28 @@ print_line() {
     printf "%0.s-" {1..17}
     printf "+"
     printf "%0.s-" {1..17}
+    printf "+"
+    printf "%0.s-" {1..17}
     printf "+\n"
 }
 
 # Print table header
 print_line
-printf "| %-10s | %-15s | %-15s | %-15s |\n" "Engine" "Binary Size" "Time/Template" "Relative Perf."
+printf "| %-10s | %-15s | %-15s | %-15s | %-15s |\n" "Engine" "Binary Size" "Relative Size" "Time/Template" "Relative Perf."
 print_line
 
 # Print table rows
-printf "| %-10s | %-15s | %-15s | %-15s |\n" "Minilate" "$(format_size "$MINILATE_SIZE")" "$MINILATE_TIME_DISPLAY" "$MINILATE_RELATIVE"
-printf "| %-10s | %-15s | %-15s | %-15s |\n" "Handlebars" "$(format_size "$HANDLEBARS_SIZE")" "$HANDLEBARS_TIME_DISPLAY" "$HANDLEBARS_RELATIVE"
-printf "| %-10s | %-15s | %-15s | %-15s |\n" "MiniJinja" "$(format_size "$MINIJINJA_SIZE")" "$MINIJINJA_TIME_DISPLAY" "$MINIJINJA_RELATIVE"
+printf "| %-10s | %-15s | %-15s | %-15s  | %-15s |\n" "Minilate" "$(format_size "$MINILATE_SIZE")" "$MINILATE_SIZE_RELATIVE" "${MINILATE_TIME_DISPLAY}" "$MINILATE_RELATIVE"
+printf "| %-10s | %-15s | %-15s | %-15s  | %-15s |\n" "Handlebars" "$(format_size "$HANDLEBARS_SIZE")" "$HANDLEBARS_SIZE_RELATIVE" "${HANDLEBARS_TIME_DISPLAY}" "$HANDLEBARS_RELATIVE"
+printf "| %-10s | %-15s | %-15s | %-15s  | %-15s |\n" "MiniJinja" "$(format_size "$MINIJINJA_SIZE")" "$MINIJINJA_SIZE_RELATIVE" "${MINIJINJA_TIME_DISPLAY}" "$MINIJINJA_RELATIVE"
 
 # Print table footer
 print_line
 
-echo -e "\n${YELLOW}Note: Relative Performance uses Minilate as the baseline (1.00x).${NC}"
+echo -e "\n${YELLOW}Note: Relative Performance and Relative Size use Minilate as the baseline (1.00x).${NC}"
 echo -e "${YELLOW}Lower times and smaller binary sizes are better.${NC}"
 echo -e "${YELLOW}Higher relative performance numbers mean slower execution compared to Minilate.${NC}"
+echo -e "${YELLOW}Higher relative size numbers mean larger binaries compared to Minilate.${NC}"
 echo -e "${YELLOW}HTML reports with detailed metrics are available in the target/criterion directory.${NC}"
 
 exit 0

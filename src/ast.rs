@@ -25,12 +25,7 @@ pub(crate) enum AstNode<'a> {
     If {
         condition: Box<AstNode<'a>>,
         body: Vec<AstNode<'a>>,
-        else_branch: Option<Box<AstNode<'a>>>, // This will typically be an AstNode::Else
-    },
-    /// A Else statement. Typically used inside an If node's else_branch.
-    /// For an 'else if' chain, the body of Else would contain a single If node.
-    Else {
-        body: Vec<AstNode<'a>>,
+        else_branch: Option<Box<AstNode<'a>>>, // This will typically be an AstNode::Root for else branches
     },
     /// Conditional NOT
     Not {

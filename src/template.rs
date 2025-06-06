@@ -304,11 +304,7 @@ fn collect_variables_from_node<'a, 'b>(
                 collect_variables_from_node(else_node, variables, context);
             }
         }
-        AstNode::Else { body } => {
-            for child in body {
-                collect_variables_from_node(child, variables, context);
-            }
-        }
+        // Else nodes have been replaced with Root nodes
         AstNode::Not { condition } => {
             collect_variables_from_node(condition, variables, context);
         }
@@ -333,7 +329,7 @@ fn find_template_inclusions<'a>(
     in_for_loop: Option<&'a str>, // Track if we're in a for loop and the iterable name
 ) {
     match node {
-        AstNode::Root(children) | AstNode::Else { body: children } => {
+        AstNode::Root(children) => {
             for child in children {
                 find_template_inclusions(child, direct_inclusions, conditional_inclusions, for_loop_inclusions, context, in_condition, in_for_loop);
             }
@@ -502,11 +498,7 @@ where
                 render_node(else_node, context, output, engine)?;
             }
         }
-        AstNode::Else { body } => {
-            for child in body {
-                render_node(child, context, output, engine)?;
-            }
-        }
+        // Else nodes have been replaced with Root nodes
         // Template inclusion handling
         AstNode::TemplateInclude { template_name } => {
             if let Some(engine) = engine {
@@ -619,8 +611,7 @@ pub(crate) fn evaluate_condition<'a>(condition: &AstNode<'a>, context: &Context<
         AstNode::Root(_)
         | AstNode::Constant { .. }
         | AstNode::For { .. }
-        | AstNode::If { .. }
-        | AstNode::Else { .. } => Err(MinilateError::RenderError {
+        | AstNode::If { .. } => Err(MinilateError::RenderError {
             message: format!("Invalid condition node: {:?}", condition),
         }),
     }

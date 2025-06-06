@@ -401,15 +401,15 @@ impl<'a> Parser<'a> {
                 self.expect("%}}")?;
 
                 let nested_if_node = self.parse_if_block_internal(next_if_condition)?;
-                else_branch_for_current_if = Some(Box::new(AstNode::Else {
-                    body: vec![nested_if_node],
-                }));
+                else_branch_for_current_if = Some(Box::new(AstNode::Root(
+                    vec![nested_if_node],
+                )));
                 break 'body_parsing_loop;
             } else if self.peek("{{% else %}}") {
                 self.consume("{{% else %}}");
                 let else_body = self.parse_nodes_until(Some("{{% endif %}}"))?;
                 self.expect("{{% endif %}}")?;
-                else_branch_for_current_if = Some(Box::new(AstNode::Else { body: else_body }));
+                else_branch_for_current_if = Some(Box::new(AstNode::Root(else_body)));
                 break 'body_parsing_loop;
             } else if self.peek("{{% endif %}}") {
                 self.consume("{{% endif %}}");
@@ -929,9 +929,9 @@ mod tests {
         let expected = AstNode::Root(vec![AstNode::If {
             condition: Box::new(var!("user.active")),
             body: vec![const_str!("Welcome!")],
-            else_branch: Some(Box::new(AstNode::Else {
-                body: vec![const_str!("Access Denied.")],
-            })),
+            else_branch: Some(Box::new(AstNode::Root(
+                vec![const_str!("Access Denied.")],
+            ))),
         }]);
         assert_eq!(tokenize(input), Ok(expected));
     }
@@ -945,10 +945,10 @@ mod tests {
             // Outer If (a)
             condition: Box::new(var!("a")),
             body: vec![const_str!(" A ")],
-            else_branch: Some(Box::new(AstNode::Else {
+            else_branch: Some(Box::new(AstNode::Root(
                 // Else branch for "a"
-                body: vec![
-                    // Body of this Else contains the "else if b" part
+                vec![
+                    // Body of this Root contains the "else if b" part
                     AstNode::If {
                         // Inner If (b) - representing "else if b"
                         condition: Box::new(var!("b")),
@@ -956,7 +956,7 @@ mod tests {
                         else_branch: None, // "else if b" has no further "else"
                     },
                 ],
-            })),
+            ))),
         }]);
         assert_eq!(tokenize(input), Ok(expected));
     }
@@ -968,21 +968,21 @@ mod tests {
             // Outer If (cA)
             condition: Box::new(var!("cA")),
             body: vec![const_str!("Aye")],
-            else_branch: Some(Box::new(AstNode::Else {
+            else_branch: Some(Box::new(AstNode::Root(
                 // Else branch for cA
-                body: vec![
+                vec![
                     // Body contains the "else if cB..." part
                     AstNode::If {
                         // Inner If (cB) for "else if cB"
                         condition: Box::new(var!("cB")),
                         body: vec![const_str!("Bee")],
-                        else_branch: Some(Box::new(AstNode::Else {
+                        else_branch: Some(Box::new(AstNode::Root(
                             // Else branch for cB
-                            body: vec![const_str!("Sea")], // Body of the innermost Else
-                        })),
+                            vec![const_str!("Sea")], // Body of the innermost else
+                        ))),
                     },
                 ],
-            })),
+            ))),
         }]);
         assert_eq!(tokenize(input), Ok(expected));
     }
@@ -1079,9 +1079,9 @@ mod tests {
             body: vec![AstNode::If {
                 condition: Box::new(var!("user.active")),
                 body: vec![var!("user.name")],
-                else_branch: Some(Box::new(AstNode::Else {
-                    body: vec![const_str!("Inactive")],
-                })),
+                else_branch: Some(Box::new(AstNode::Root(
+                    vec![const_str!("Inactive")],
+                ))),
             }],
         }]);
         assert_eq!(tokenize(input), Ok(expected));
@@ -1105,9 +1105,9 @@ mod tests {
                 iterable: "items",
                 body: vec![var!("item")],
             }],
-            else_branch: Some(Box::new(AstNode::Else {
-                body: vec![const_str!("No items.")],
-            })),
+            else_branch: Some(Box::new(AstNode::Root(
+                vec![const_str!("No items.")],
+            ))),
         }]);
         assert_eq!(tokenize(input).unwrap(), expected);
     }

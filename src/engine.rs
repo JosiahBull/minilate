@@ -46,7 +46,7 @@ impl<'a> MinilateEngine<'a> {
         visited: &mut Vec<&'b str>,
     ) {
         match node {
-            AstNode::Root(children) | AstNode::Else { body: children } => {
+            AstNode::Root(children) => {
                 // Process all children nodes
                 for child in children {
                     self.collect_inclusion_variables(child, variables, context, visited);

@@ -1,13 +1,20 @@
 use std::borrow::Cow;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, PartialEq, Clone)] // Added PartialEq and Clone for easier testing
 pub(crate) enum AstNode<'a> {
+    Root(Vec<AstNode<'a>>),
     /// A constant block of text from the template, with all escapes processed.
     ///
     /// If there were no escapes in the given text this will be Borrowed -
     /// otherwise we are forced to allocate.
-    Constant { data: Cow<'a, str> },
+    Constant {
+        data: Cow<'a, str>,
+    },
     /// A variable.
-    Variable { name: &'a str },
+    Variable {
+        name: &'a str,
+    },
     /// A For loop.
     For {
         iterable: &'a str,
@@ -18,11 +25,17 @@ pub(crate) enum AstNode<'a> {
     If {
         condition: Box<AstNode<'a>>,
         body: Vec<AstNode<'a>>,
+        else_branch: Option<Box<AstNode<'a>>>, // This will typically be an AstNode::Else
     },
-    /// A Else statement.
-    Else { body: Vec<AstNode<'a>> },
+    /// A Else statement. Typically used inside an If node's else_branch.
+    /// For an 'else if' chain, the body of Else would contain a single If node.
+    Else {
+        body: Vec<AstNode<'a>>,
+    },
     /// Conditional NOT
-    Not { condition: Box<AstNode<'a>> },
+    Not {
+        condition: Box<AstNode<'a>>,
+    },
     /// Conditional AND
     And {
         left: Box<AstNode<'a>>,
@@ -32,5 +45,9 @@ pub(crate) enum AstNode<'a> {
     Or {
         left: Box<AstNode<'a>>,
         right: Box<AstNode<'a>>,
+    },
+    /// Template inclusion
+    TemplateInclude {
+        template_name: &'a str,
     },
 }

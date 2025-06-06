@@ -1,0 +1,21 @@
+
+# User Profile: {{ user.name }}
+
+{{#if user.active}}
+**Status:** Active User (Age: {{ user.age }})
+{{else}}
+**Status:** Inactive User
+{{/if}}
+
+{{#if show_details}}
+## User Details
+
+{{#if has_access}}
+### Items:
+{{#each items}}
+- {{ this.name }} (Value: {{ this.value }}) {{#if this.special}}**SPECIAL**{{/if}}
+{{/each}}
+{{else}}
+*You don't have access to view details*
+{{/if}}
+{{/if}}

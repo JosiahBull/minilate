@@ -1,7 +1,38 @@
 [package]
 name = "minilate"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
-thiserror = "2.0.12"
+thiserror = "2"
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+rand = "0.8"
+serde_json = "1.0"
+handlebars = "5.0.0"
+minijinja = "1.0.12"
+
+# Optimise benchmarks for minimal size.
+[profile.bench]
+opt-level = "s"
+strip = true
+lto = true
+codegen-units = 1
+
+[[bench]]
+name = "bench_minilate"
+harness = false
+
+[[bench]]
+name = "bench_handlebars"
+harness = false
+
+[[bench]]
+name = "bench_minijinja"
+harness = false

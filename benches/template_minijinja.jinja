@@ -1,0 +1,21 @@
+
+# User Profile: {{ user.name }}
+
+{% if user.active %}
+**Status:** Active User (Age: {{ user.age }})
+{% else %}
+**Status:** Inactive User
+{% endif %}
+
+{% if show_details %}
+## User Details
+
+{% if has_access %}
+### Items:
+{% for item in items %}
+- {{ item.name }} (Value: {{ item.value }}) {% if item.special %}**SPECIAL**{% endif %}
+{% endfor %}
+{% else %}
+*You don't have access to view details*
+{% endif %}
+{% endif %}

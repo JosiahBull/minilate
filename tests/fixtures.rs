@@ -1,5 +1,5 @@
-use minilate::{ExampleEngine, MinilateEngine};
+use minilate::{MinilateEngine, MinilateInterface};
 
-pub fn get_engine() -> impl MinilateEngine {
-    ExampleEngine::new()
+pub fn get_engine() -> impl MinilateInterface {
+    MinilateEngine::new()
 }

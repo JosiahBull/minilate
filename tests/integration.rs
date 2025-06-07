@@ -4,6 +4,7 @@ use fixtures::{generate_random_whitespace, generate_random_whitespace_at_least_o
 use minilate::{Context, MinilateError, MinilateInterface, VariableTy};
 
 #[test]
+#[ntest::timeout(100)]
 fn test_basic_substitution() {
     let mut engine = get_engine();
     engine
@@ -35,6 +36,7 @@ fn test_basic_substitution() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_basic_iteration() {
     let template = format!(
         "{{{{%{}for{}cat{}in{}cats{}%}}}}Greetings {{{{{}cat{}}}}}\n{{{{%{}endfor{}%}}}}",
@@ -84,6 +86,7 @@ fn test_basic_iteration() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_non_iterable_passed_to_loop() {
     let mut engine = get_engine();
     engine
@@ -114,6 +117,7 @@ fn test_non_iterable_passed_to_loop() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_if_statement() {
     let mut engine = get_engine();
     engine
@@ -143,6 +147,7 @@ fn test_if_statement() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_if_else_statement() {
     let template = format!(
         "{{{{%{}if{}condition{}%}}}}True{{{{%{}else{}%}}}}False{{{{%{}endif{}%}}}}",
@@ -178,6 +183,7 @@ fn test_if_else_statement() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_logical_operators() {
     let mut engine = get_engine();
     engine
@@ -216,6 +222,7 @@ fn test_logical_operators() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_missing_variable() {
     let mut engine = get_engine();
     engine
@@ -230,6 +237,7 @@ fn test_missing_variable() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_nested_structures() {
     let mut engine = get_engine();
     engine
@@ -248,6 +256,7 @@ fn test_nested_structures() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_complex_nested_structures() {
     let mut engine = get_engine();
     engine
@@ -285,6 +294,7 @@ fn test_complex_nested_structures() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_boolean_conditions() {
     let mut engine = get_engine();
     engine
@@ -314,6 +324,7 @@ fn test_boolean_conditions() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_variable_data_missing() {
     let mut engine = get_engine();
     engine
@@ -332,6 +343,7 @@ fn test_variable_data_missing() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_duplicate_template() {
     let mut engine = get_engine();
 
@@ -344,6 +356,7 @@ fn test_duplicate_template() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_render_missing_template() {
     let engine = get_engine();
 
@@ -352,6 +365,7 @@ fn test_render_missing_template() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_context_collector() {
     let mut engine = get_engine();
     engine
@@ -390,6 +404,7 @@ fn test_context_collector() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_whitespace_handling() {
     let mut engine = get_engine();
     engine
@@ -409,6 +424,7 @@ fn test_whitespace_handling() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_basic_template_referencing() {
     let mut engine = get_engine();
 
@@ -435,6 +451,7 @@ fn test_basic_template_referencing() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_conditional_template_referencing_if() {
     let mut engine = get_engine();
 
@@ -482,6 +499,7 @@ fn test_conditional_template_referencing_if() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_conditional_template_referencing_for() {
     let mut engine = get_engine();
 
@@ -526,6 +544,7 @@ fn test_conditional_template_referencing_for() {
 }
 
 #[test]
+#[ntest::timeout(100)]
 fn test_rendering_with_include_nested() {
     let mut engine = get_engine();
 

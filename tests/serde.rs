@@ -3,6 +3,7 @@ mod serde_tests {
     use minilate::{Context, MinilateEngine, MinilateInterface, Template, VariableTy};
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_variable_ty_serialization() {
         let ty = VariableTy::String;
         let serialized = serde_json::to_string(&ty).unwrap();
@@ -13,6 +14,7 @@ mod serde_tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_variable_serialization() {
         let var = VariableTy::String.with_data("test data");
         let serialized = serde_json::to_string(&var).unwrap();
@@ -35,6 +37,7 @@ mod serde_tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_context_serialization() {
         let mut context = Context::new();
         context.insert("name", VariableTy::String.with_data("John"));
@@ -53,6 +56,7 @@ mod serde_tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_template_serialization() {
         let template = Template::new("Hello, {{ name }}!".to_string()).unwrap();
 
@@ -77,6 +81,7 @@ mod serde_tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_engine_serialization() {
         let mut engine = MinilateEngine::new();
 

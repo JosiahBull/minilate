@@ -2,3 +2,4 @@
 /precursor
 /benchmark_results/*
 !/benchmark_results/.gitkeep
+/mutants*

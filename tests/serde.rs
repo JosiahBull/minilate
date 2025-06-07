@@ -1,7 +1,6 @@
 #[cfg(feature = "serde")]
 mod serde_tests {
     use minilate::{Context, MinilateEngine, MinilateInterface, Template, VariableTy};
-    use serde_json;
 
     #[test]
     fn test_variable_ty_serialization() {
@@ -69,7 +68,9 @@ mod serde_tests {
 
         // Both templates should render the same output
         let original_output = template.render(&context, None::<&MinilateEngine>).unwrap();
-        let deserialized_output = deserialized.render(&context, None::<&MinilateEngine>).unwrap();
+        let deserialized_output = deserialized
+            .render(&context, None::<&MinilateEngine>)
+            .unwrap();
 
         assert_eq!(original_output, deserialized_output);
         assert_eq!(original_output, "Hello, World!");

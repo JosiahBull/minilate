@@ -82,8 +82,6 @@ impl<'c> Template<'c> {
         // Parse the template content into an AST
         let ast = tokenize(&content)?;
 
-        dbg!(&ast); // Debugging: print the AST structure
-
         // SAFETY: We're using unsafe to convert the lifetime to 'static since we're storing the AST
         // along with the content it references. This is safe because:
         // 1. The AST holds references to the content string
@@ -125,7 +123,7 @@ impl<'c> Template<'c> {
     /// assert_eq!(variables.len(), 1);
     /// assert_eq!(variables[0].0, "name");
     /// ```
-    pub fn collect_variables<'a, 'b>(
+    pub fn collect_variables<'b>(
         &'b self,
         variables: &mut Vec<(&'b str, VariableTy)>,
         context: &Context<'_>,
@@ -226,7 +224,7 @@ impl<'c> Template<'c> {
 /// This function recursively traverses the AST to find all variables used in the template.
 /// It handles different types of nodes like variables, for-loops, if statements, etc.,
 /// and collects variables with their appropriate types based on usage context.
-fn collect_variables_from_node<'a, 'b>(
+fn collect_variables_from_node<'a>(
     node: &'a AstNode<'a>,
     variables: &mut Vec<(&'a str, VariableTy)>,
     context: &Context<'_>,
@@ -578,7 +576,7 @@ where
                     && context
                         .get("members")
                         .and_then(|v| v.data())
-                        .map_or(false, |d| !d.is_empty());
+                        .is_some_and(|d| !d.is_empty());
 
                 // For the group_greeting template, we need to make sure the name variable exists
                 if in_for_loop && context.get("name").is_none() {

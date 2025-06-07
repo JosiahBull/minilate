@@ -87,15 +87,9 @@ fn create_minilate_context(json: &Value) -> Context<'static> {
             "false"
         };
 
-        context.insert(
-            format!("item.name"),
-            VariableTy::String.with_data(name.to_owned()),
-        );
-        context.insert(format!("item.value"), VariableTy::String.with_data(value));
-        context.insert(
-            format!("item.special"),
-            VariableTy::Boolean.with_data(special),
-        );
+        context.insert("item.name", VariableTy::String.with_data(name.to_owned()));
+        context.insert("item.value", VariableTy::String.with_data(value));
+        context.insert("item.special", VariableTy::Boolean.with_data(special));
 
         if i > 0 {
             items_data.push_str(", ");

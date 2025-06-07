@@ -35,7 +35,7 @@ impl<'a> Variable<'a> {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Context<'a> {
     data: BTreeMap<String, Variable<'a>>,
 }
@@ -58,20 +58,6 @@ impl<'a> Context<'a> {
 
     pub fn contains<T: AsRef<str>>(&self, name: T) -> bool {
         self.data.contains_key(name.as_ref())
-    }
-
-    pub fn clone(&self) -> Context<'a> {
-        Context {
-            data: self.data.clone(),
-        }
-    }
-}
-
-impl Default for Context<'_> {
-    fn default() -> Self {
-        Self {
-            data: BTreeMap::new(),
-        }
     }
 }
 

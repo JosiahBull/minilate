@@ -458,7 +458,7 @@ fn test_conditional_template_referencing_if() {
     // When polite=true, we also need the referenced template's variables
     let mut context = engine.context(
         "form",
-        &Context::new().insert("polite", VariableTy::Boolean.with_data("true")),
+        Context::new().insert("polite", VariableTy::Boolean.with_data("true")),
     );
     assert_eq!(context.len(), 1);
     let (name, type_) = context.pop().unwrap();

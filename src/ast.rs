@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, PartialEq, Clone)] // Added PartialEq and Clone for easier testing
-pub(crate) enum AstNode<'a> {
+pub enum AstNode<'a> {
     Root(Vec<AstNode<'a>>),
     /// A constant block of text from the template, with all escapes processed.
     ///

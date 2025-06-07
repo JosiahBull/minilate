@@ -1,3 +1,11 @@
+#![allow(
+    clippy::string_slice,
+    clippy::tests_outside_test_module,
+    clippy::unwrap_used,
+    clippy::indexing_slicing,
+    reason = "benchmark"
+)]
+
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use minilate::{Context, MinilateEngine, MinilateInterface, VariableTy};
 use serde_json::Value;

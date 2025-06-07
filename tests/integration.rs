@@ -1,3 +1,9 @@
+#![allow(
+    clippy::string_slice,
+    clippy::tests_outside_test_module,
+    reason = "tests"
+)]
+
 mod fixtures;
 
 use fixtures::{generate_random_whitespace, generate_random_whitespace_at_least_one, get_engine};
@@ -50,8 +56,6 @@ fn test_basic_iteration() {
         generate_random_whitespace(),
         generate_random_whitespace(),
     );
-
-    dbg!(&template);
 
     let mut engine = get_engine();
     engine.add_template("Template A", template).unwrap();
@@ -159,8 +163,6 @@ fn test_if_else_statement() {
         generate_random_whitespace(),
         generate_random_whitespace(),
     );
-
-    dbg!(&template);
 
     let mut engine = get_engine();
     engine.add_template("IfElse", template).unwrap();

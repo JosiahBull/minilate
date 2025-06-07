@@ -1,3 +1,11 @@
+#![allow(
+    clippy::string_slice,
+    clippy::tests_outside_test_module,
+    clippy::unwrap_used,
+    clippy::indexing_slicing,
+    reason = "benchmark"
+)]
+
 use rand::{Rng, SeedableRng, rngs::StdRng};
 use serde_json::{Value, json};
 

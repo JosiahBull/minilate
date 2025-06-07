@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: detect-private-key
+      - id: mixed-line-ending
+      - id: pretty-format-json
+        args: ["--autofix"]
+        exclude: ".devcontainer/devcontainer.json"
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+        files: ".*\\.(?:tex|py)$"
+  - repo: local
+    hooks:
+      - id: lint
+        name: Run linting script
+        entry: ./scripts/format.sh
+        language: script
+        types: [file]

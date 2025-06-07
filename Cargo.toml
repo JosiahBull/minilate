@@ -1,10 +1,9 @@
 [package]
 name = "minilate"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-thiserror = "2"
 serde = { version = "1", features = ["derive"], optional = true }
 
 [features]
@@ -17,10 +16,11 @@ rand = "0.8"
 serde_json = "1.0"
 handlebars = "5.0.0"
 minijinja = "1.0.12"
+ntest = "0.9.3"
 
 # Optimise benchmarks for minimal size.
 [profile.bench]
-opt-level = 3
+opt-level = "z"
 strip = true
 lto = true
 codegen-units = 1

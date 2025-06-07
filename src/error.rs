@@ -1,24 +1,45 @@
 pub type MinilateResult<T> = std::result::Result<T, MinilateError>;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ParseErrorKind {
-    #[error("Expected {expected}, found {found}")]
     UnexpectedToken { expected: String, found: String },
-    #[error("Unexpected EOF {expected_what}")]
     UnexpectedEOF {
         /// Describes what was expected, e.g., "(expected '}}')"
         expected_what: String,
     },
-    #[error("Invalid identifier starting with '{at_char}'")]
     InvalidIdentifier { at_char: String },
-    #[error("Unknown keyword '{keyword}'")]
     UnknownKeyword { keyword: String },
-    #[error("Expected {description}")]
     Expected { description: String },
-    #[error("Parser error: {0}")]
     Message(String),
 }
+
+impl std::fmt::Display for ParseErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseErrorKind::UnexpectedToken { expected, found } => {
+                write!(f, "Expected {}, found {}", expected, found)
+            }
+            ParseErrorKind::UnexpectedEOF { expected_what } => {
+                write!(f, "Unexpected EOF{}", expected_what)
+            }
+            ParseErrorKind::InvalidIdentifier { at_char } => {
+                write!(f, "Invalid identifier starting with '{}'", at_char)
+            }
+            ParseErrorKind::UnknownKeyword { keyword } => {
+                write!(f, "Unknown keyword '{}'", keyword)
+            }
+            ParseErrorKind::Expected { description } => {
+                write!(f, "Expected {}", description)
+            }
+            ParseErrorKind::Message(msg) => {
+                write!(f, "Parser error: {}", msg)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ParseErrorKind {}
 
 impl ParseErrorKind {
     pub fn unexpected_eof(expected: Option<String>) -> Self {
@@ -29,7 +50,7 @@ impl ParseErrorKind {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ParseError {
     pub line: usize,
     pub column: usize,
@@ -46,25 +67,75 @@ impl std::fmt::Display for ParseError {
     }
 }
 
+impl std::error::Error for ParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(&self.kind)
+    }
+}
+
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MinilateError {
-    #[error("Template already exists: {template_name}")]
     TemplateExists { template_name: String },
-    #[error("Template not found: {template_name}")]
     MissingTemplate { template_name: String },
-    #[error("Variable not found: {variable_name}")]
     MissingVariable { variable_name: String },
-    #[error("Variable data missing: {variable_name}")]
     MissingVariableData { variable_name: String },
-    #[error("Type mismatch for variable {variable_name}: expected {expected:?}, found {found:?}")]
     TypeMismatch {
         variable_name: String,
         expected: crate::interface::VariableTy,
         found: crate::interface::VariableTy,
     },
-    #[error("Rendering error: {message}")]
     RenderError { message: String },
-    #[error(transparent)]
-    Parse(#[from] ParseError),
+    Parse(ParseError),
+}
+
+impl std::fmt::Display for MinilateError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MinilateError::TemplateExists { template_name } => {
+                write!(f, "Template already exists: {}", template_name)
+            }
+            MinilateError::MissingTemplate { template_name } => {
+                write!(f, "Template not found: {}", template_name)
+            }
+            MinilateError::MissingVariable { variable_name } => {
+                write!(f, "Variable not found: {}", variable_name)
+            }
+            MinilateError::MissingVariableData { variable_name } => {
+                write!(f, "Variable data missing: {}", variable_name)
+            }
+            MinilateError::TypeMismatch {
+                variable_name,
+                expected,
+                found,
+            } => {
+                write!(
+                    f,
+                    "Type mismatch for variable {}: expected {:?}, found {:?}",
+                    variable_name, expected, found
+                )
+            }
+            MinilateError::RenderError { message } => {
+                write!(f, "Rendering error: {}", message)
+            }
+            MinilateError::Parse(parse_error) => {
+                write!(f, "{}", parse_error)
+            }
+        }
+    }
+}
+
+impl std::error::Error for MinilateError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            MinilateError::Parse(parse_error) => Some(parse_error),
+            _ => None,
+        }
+    }
+}
+
+impl From<ParseError> for MinilateError {
+    fn from(error: ParseError) -> Self {
+        MinilateError::Parse(error)
+    }
 }

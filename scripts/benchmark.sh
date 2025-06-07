@@ -358,11 +358,11 @@ printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
     "Minilate" "$(format_size "$MINILATE_SIZE")" "$MINILATE_SIZE_RELATIVE" "${MINILATE_TIME_DISPLAY}" "$MINILATE_RELATIVE" \
     "$(format_time_display "$LAST_MINILATE_TIME")" "$(format_time_display "$PREV_MINILATE_TIME")"
 
-printf "| %-10s | %-13s | %-11s | %-13s | %-11s | %-9s | %-11s |\n" \
+printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
     "Handlebars" "$(format_size "$HANDLEBARS_SIZE")" "$HANDLEBARS_SIZE_RELATIVE" "${HANDLEBARS_TIME_DISPLAY}" "$HANDLEBARS_RELATIVE" \
     "$(format_time_display "$LAST_HANDLEBARS_TIME")" "$(format_time_display "$PREV_HANDLEBARS_TIME")"
 
-printf "| %-10s | %-13s | %-11s | %-13s | %-11s | %-9s | %-11s |\n" \
+printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
     "MiniJinja" "$(format_size "$MINIJINJA_SIZE")" "$MINIJINJA_SIZE_RELATIVE" "${MINIJINJA_TIME_DISPLAY}" "$MINIJINJA_RELATIVE" \
     "$(format_time_display "$LAST_MINIJINJA_TIME")" "$(format_time_display "$PREV_MINIJINJA_TIME")"
 

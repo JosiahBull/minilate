@@ -493,6 +493,7 @@ mod test_utils {
     use super::*;
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_peek_any() {
         let parser = Parser::new("  {{%     if condition %}}");
         assert!(!parser.peek_n(["{{%", "if"]));
@@ -536,11 +537,13 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_empty_input() {
         assert_eq!(tokenize("").unwrap(), AstNode::Root(vec![]));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_simple_constant() {
         assert_eq!(
             tokenize("hello world").unwrap(),
@@ -549,6 +552,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_constant_ending_at_eof() {
         assert_eq!(
             tokenize("text").unwrap(),
@@ -557,6 +561,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_simple_variable() {
         assert_eq!(
             tokenize("{{name}}").unwrap(),
@@ -565,6 +570,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_variable_with_whitespace() {
         assert_eq!(
             tokenize("{{ name }}").unwrap(),
@@ -573,6 +579,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_variable_with_dot() {
         assert_eq!(
             tokenize("{{ user.name }}").unwrap(),
@@ -581,6 +588,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_constant_and_variable() {
         assert_eq!(
             tokenize("Hello {{name}}!").unwrap(),
@@ -589,6 +597,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_multiple_variables() {
         assert_eq!(
             tokenize("{{first}} {{second}}").unwrap(),
@@ -597,6 +606,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_leading_constant() {
         assert_eq!(
             tokenize("Prefix {{var}}").unwrap(),
@@ -605,6 +615,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_trailing_constant() {
         assert_eq!(
             tokenize("{{var}} Suffix").unwrap(),
@@ -613,6 +624,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_panic_unclosed_variable() {
         let err = tokenize("{{var").unwrap_err();
         assert!(
@@ -621,6 +633,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_panic_empty_variable() {
         let err = tokenize("{{}}").unwrap_err();
         assert!(
@@ -629,6 +642,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_panic_empty_variable_with_space() {
         let err = tokenize("{{ }}").unwrap_err();
         assert!(
@@ -639,6 +653,7 @@ mod tests {
     // Test to ensure that if parse_constant returns an empty string (e.g. "{{var}}"),
     // it's not added to the node list by parse_nodes_until if a real node follows.
     #[test]
+    #[ntest::timeout(100)]
     fn test_no_spurious_empty_constants_at_start_of_tag() {
         let ast = tokenize("{{var}}").unwrap();
         if let AstNode::Root(nodes) = ast {
@@ -650,6 +665,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_no_spurious_empty_constants_between_tags() {
         let ast = tokenize("{{var1}}{{var2}}").unwrap();
         if let AstNode::Root(nodes) = ast {
@@ -679,6 +695,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_single_variable() {
         assert_eq!(
             parse_test_condition("isActive").unwrap(),
@@ -687,6 +704,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_not() {
         assert_eq!(
             parse_test_condition("!isActive").unwrap(),
@@ -697,6 +715,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_double_not() {
         assert_eq!(
             parse_test_condition("!!user").unwrap(),
@@ -709,6 +728,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_and() {
         assert_eq!(
             parse_test_condition("user && isActive").unwrap(),
@@ -720,6 +740,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_or() {
         assert_eq!(
             parse_test_condition("isAdmin || isSuperuser").unwrap(),
@@ -731,6 +752,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_precedence_and_then_or() {
         // Expected: (a && b) || c
         assert_eq!(
@@ -746,6 +768,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_precedence_or_and_and() {
         // Expected: a || (b && c) -> but current grammar is left-associative for same precedence
         // OR and AND are usually different precedence. Here, OR is lower (binds less tightly).
@@ -769,6 +792,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_precedence_not_and() {
         // Expected: (!a) && b
         assert_eq!(
@@ -783,6 +807,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_precedence_not_or() {
         // Expected: (!a) || b
         assert_eq!(
@@ -797,6 +822,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_complex_precedence() {
         // Expected: (!a && (b || !c)) || d
         // Our parser: ( (!a) && (b || (!c)) ) || d
@@ -833,36 +859,42 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_empty_string() {
         let err = parse_test_condition("").unwrap_err();
         assert!(matches!(err.kind, ParseErrorKind::Expected { .. }));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_only_operator_and() {
         let err = parse_test_condition("&").unwrap_err();
         assert!(matches!(err.kind, ParseErrorKind::Expected { .. }));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_incomplete_and() {
         let err = parse_test_condition("a &&").unwrap_err();
         assert!(matches!(err.kind, ParseErrorKind::Expected { .. }));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_incomplete_or() {
         let err = parse_test_condition("a ||").unwrap_err();
         assert!(matches!(err.kind, ParseErrorKind::Expected { .. }));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_incomplete_not() {
         let err = parse_test_condition("!").unwrap_err();
         assert!(matches!(err.kind, ParseErrorKind::Expected { .. }));
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_condition_trailing_operator_error() {
         // parse_test_condition("a && b ||") would return Err
         // The error kind should be ParseErrorKind::Expected { description: "identifier" }
@@ -879,6 +911,7 @@ mod tests {
 
     // --- Tests for For Loops ---
     #[test]
+    #[ntest::timeout(100)]
     fn test_simple_for_loop() {
         let input = "{{% for item in items %}} {{item}} {{% endfor %}}";
         let expected = AstNode::Root(vec![AstNode::For {
@@ -890,6 +923,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_for_loop_with_constants_and_vars() {
         let input = "{{% for x in list %}}Value: {{x}}!{{% endfor %}}";
         let expected = AstNode::Root(vec![AstNode::For {
@@ -901,6 +935,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_empty_for_loop() {
         let input = "{{% for i in data %}}{{% endfor %}}";
         let expected = AstNode::Root(vec![AstNode::For {
@@ -912,6 +947,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_for_loop_missing_in() {
         let input = "{{% for item items %}}loop{{% endfor %}}";
         let err = tokenize(input).unwrap_err();
@@ -935,6 +971,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_for_loop_missing_iterable() {
         let input = "{{% for item in %}}loop{{% endfor %}}";
         let err = tokenize(input).unwrap_err();
@@ -947,6 +984,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_for_loop_missing_closing_tag_delimiter() {
         let input = "{{% for item in items loop{{% endfor %}}";
         let err = tokenize(input).unwrap_err();
@@ -959,6 +997,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_for_loop_unclosed_block() {
         let input = "{{% for item in items %}}loop";
         let err = tokenize(input).unwrap_err();
@@ -973,6 +1012,7 @@ mod tests {
 
     // --- Tests for If Statements ---
     #[test]
+    #[ntest::timeout(100)]
     fn test_simple_if() {
         let input = "{{% if condition %}}Hello{{% endif %}}";
         let expected = AstNode::Root(vec![AstNode::If {
@@ -984,6 +1024,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_with_empty_body() {
         let input = "{{% if condition %}}{{% endif %}}";
         let expected = AstNode::Root(vec![AstNode::If {
@@ -995,6 +1036,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_else() {
         let input = "{{% if user.active %}}Welcome!{{% else %}}Access Denied.{{% endif %}}";
         let expected = AstNode::Root(vec![AstNode::If {
@@ -1006,6 +1048,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_else_if() {
         // {{% if a %}} A {{% else if b %}} B {{% endif %}}
         // This implies the endif closes 'b', and then the outer 'if a' structure.
@@ -1031,6 +1074,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_else_if_else() {
         let input = "{{% if cA %}}Aye{{% else if cB %}}Bee{{% else %}}Sea{{% endif %}}";
         let expected = AstNode::Root(vec![AstNode::If {
@@ -1057,6 +1101,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_with_complex_condition() {
         // Let's re-test the complex condition from before directly within an if
         let input_complex = "{{% if !a && b || !c %}}Content{{% endif %}}";
@@ -1083,6 +1128,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_missing_closing_tag_delimiter() {
         let input = "{{% if condition text {{% endif %}}";
         let err = tokenize(input).unwrap_err();
@@ -1095,6 +1141,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_unclosed_simple() {
         let input = "{{% if condition %}} text";
         let err = tokenize(input).unwrap_err();
@@ -1107,6 +1154,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_unclosed_with_else() {
         let input = "{{% if condition %}} text {{% else %}} other";
         let err = tokenize(input).unwrap_err();
@@ -1119,6 +1167,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_if_unclosed_with_else_if() {
         let input = "{{% if c1 %}} A {{% else if c2 %}} B";
         let err = tokenize(input).unwrap_err();
@@ -1132,6 +1181,7 @@ mod tests {
 
     // Nested structures
     #[test]
+    #[ntest::timeout(100)]
     fn test_nested_if_in_for() {
         let input = concat!(
             "{{% for user in users %}}",
@@ -1155,6 +1205,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_nested_for_in_if() {
         let input = concat!(
             "{{% if items_exist %}}",
@@ -1180,6 +1231,7 @@ mod tests {
     // --- Tests for Line Comments (//) ---
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_full_line() {
         let input = "// This is a full line comment\n{{var}}";
         let expected = AstNode::Root(vec![
@@ -1190,6 +1242,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_after_whitespace() {
         let input = "  // This is a comment after whitespace\n{{var}}";
         let expected = AstNode::Root(vec![
@@ -1200,6 +1253,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_at_end_of_file() {
         let input = "{{var}}\n// This is a comment at EOF";
         let expected = AstNode::Root(vec![
@@ -1210,6 +1264,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_at_very_end_of_file_no_newline() {
         let input = "{{var}}//EOF comment";
         let expected = AstNode::Root(vec![var!("var"), const_str!("//EOF comment")]);
@@ -1217,6 +1272,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_only_comment_in_file() {
         let input = "// Just a comment";
         let expected = AstNode::Root(vec![const_str!("// Just a comment")]);
@@ -1224,6 +1280,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_only_comment_with_newline_in_file() {
         let input = "// Just a comment\n";
         let expected = AstNode::Root(vec![const_str!("// Just a comment\n")]);
@@ -1231,6 +1288,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_multiple_comments() {
         let input = "// Comment 1\n{{var1}}\n// Comment 2\n  // Comment 3\n{{var2}} // Comment 4";
         let expected = AstNode::Root(vec![
@@ -1244,6 +1302,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_between_tags() {
         let input = "{{var1}} // comment here\n{{var2}}";
         let expected = AstNode::Root(vec![
@@ -1255,6 +1314,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_inside_tag_is_not_a_comment() {
         // Inside a tag, // is not a comment but part of the identifier
         let input = "{{a_b}}"; // Use a variable name without special characters
@@ -1267,6 +1327,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_inside_directive_tag() {
         // This test verifies how comments in directive tags are handled
         let input_if = "{{% if a//b %}}text{{% endif %}}";
@@ -1277,6 +1338,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_comment_in_constant_text_is_not_a_comment() {
         let input = "This is text with // inside it.";
         let expected = AstNode::Root(vec![const_str!("This is text with // inside it.")]);
@@ -1284,6 +1346,7 @@ mod tests {
     }
 
     #[test]
+    #[ntest::timeout(100)]
     fn test_empty_lines_and_comments() {
         let input = "\n  // comment\n\n{{var}}\n  \n// another";
         let expected = AstNode::Root(vec![

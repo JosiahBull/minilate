@@ -69,6 +69,29 @@ impl<'a> Parser<'a> {
         self.input[self.pos..].starts_with(s)
     }
 
+    /// Multi-token peek which checks if the remaining input starts with any of the provided tokens, ignoring whitespace between.
+    fn peek_n<const N: usize>(&self, tokens: [&str; N]) -> bool {
+        if !self.peek(tokens[0]) {
+            return false;
+        }
+
+        let mut parser = Self {
+            input: self.input,
+            pos: self.pos + tokens[0].len(),
+            line: self.line,
+            line_start_pos: self.line_start_pos,
+        };
+
+        for token in &tokens[1..] {
+            parser.consume_whitespace();
+            if !parser.peek(token) {
+                return false;
+            }
+            parser.advance_bytes_no_newline(token.len());
+        }
+        true
+    }
+
     /// Consume `s` if the remaining input starts with it.
     /// Assumes `s` does not contain newlines.
     fn consume(&mut self, s: &str) -> bool {
@@ -175,7 +198,7 @@ impl<'a> Parser<'a> {
                 self.advance_bytes_no_newline(2); // Include the {{ in the constant
                 continue;
             }
-            
+
             // Check for escaped {{%
             if self.peek("\\{{%") {
                 // Skip the backslash but include the {{% in the constant
@@ -183,7 +206,7 @@ impl<'a> Parser<'a> {
                 self.advance_bytes_no_newline(3); // Include the {{% in the constant
                 continue;
             }
-            
+
             if self.peek("{{") {
                 // Catches both {{ and {{%
                 break;
@@ -207,20 +230,17 @@ impl<'a> Parser<'a> {
 
     fn parse_variable_or_comment(&mut self) -> ParseResult<AstNode<'a>> {
         self.expect("{{")?;
-        
+
         // Check for template inclusion
         if self.consume("<<") {
             self.consume_whitespace();
             let template_name = self.consume_identifier()?;
+            self.consume(".tmpl");
             self.consume_whitespace();
-            // Handle .tmpl extension if present
-            if self.consume(".tmpl") {
-                self.consume_whitespace();
-            }
             self.expect("}}")?;
             return Ok(AstNode::TemplateInclude { template_name });
         }
-        
+
         self.consume_whitespace();
         let name = self.consume_identifier()?;
         self.consume_whitespace();
@@ -240,20 +260,24 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_nodes_until(&mut self, end_tag: Option<&str>) -> ParseResult<Vec<AstNode<'a>>> {
+    /// Parse nodes until encountering a specific control tag with keyword
+    fn parse_nodes_until<const N: usize>(
+        &mut self,
+        end_tag: Option<[&str; N]>,
+    ) -> ParseResult<Vec<AstNode<'a>>> {
         let mut nodes = Vec::new();
         loop {
             if self.eof() {
                 if let Some(tag) = end_tag {
                     return Err(
-                        self.make_error(ParseErrorKind::unexpected_eof(Some(tag.to_string())))
+                        self.make_error(ParseErrorKind::unexpected_eof(Some(tag.join(" "))))
                     );
                 }
                 break;
             }
 
             if let Some(tag) = end_tag {
-                if self.peek(tag) {
+                if self.peek_n(tag) {
                     break;
                 }
             }
@@ -362,8 +386,12 @@ impl<'a> Parser<'a> {
         self.consume_whitespace();
         self.expect("%}}")?;
 
-        let body = self.parse_nodes_until(Some("{{% endfor %}}"))?;
-        self.expect("{{% endfor %}}")?;
+        let body = self.parse_nodes_until(Some(["{{%", "endfor", "%}}"]))?;
+        self.expect("{{%")?;
+        self.consume_whitespace();
+        self.expect("endfor")?;
+        self.consume_whitespace();
+        self.expect("%}}")?;
 
         Ok(AstNode::For {
             iterable,
@@ -393,26 +421,43 @@ impl<'a> Parser<'a> {
                 ))));
             }
 
-            if self.peek("{{% else if") {
-                self.consume("{{% else if");
+            dbg!(&self.input[self.pos..]);
+
+            if self.peek_n(["{{%", "else", "if"]) {
+                self.expect("{{%")?;
+                self.consume_whitespace();
+                self.expect("else")?;
+                self.consume_whitespace();
+                self.expect("if")?;
                 self.consume_whitespace();
                 let next_if_condition = self.parse_condition_expression()?;
                 self.consume_whitespace();
                 self.expect("%}}")?;
 
                 let nested_if_node = self.parse_if_block_internal(next_if_condition)?;
-                else_branch_for_current_if = Some(Box::new(AstNode::Root(
-                    vec![nested_if_node],
-                )));
+                else_branch_for_current_if = Some(Box::new(AstNode::Root(vec![nested_if_node])));
                 break 'body_parsing_loop;
-            } else if self.peek("{{% else %}}") {
-                self.consume("{{% else %}}");
-                let else_body = self.parse_nodes_until(Some("{{% endif %}}"))?;
-                self.expect("{{% endif %}}")?;
+            } else if self.peek_n(["{{%", "else", "%}}"]) {
+                self.expect("{{%")?;
+                self.consume_whitespace();
+                self.expect("else")?;
+                self.consume_whitespace();
+                self.expect("%}}")?;
+                // Now parse the else body until we hit the end of the if block
+                let else_body = self.parse_nodes_until(Some(["{{%", "endif", "%}}"]))?;
+                self.expect("{{%")?;
+                self.consume_whitespace();
+                self.expect("endif")?;
+                self.consume_whitespace();
+                self.expect("%}}")?;
                 else_branch_for_current_if = Some(Box::new(AstNode::Root(else_body)));
                 break 'body_parsing_loop;
-            } else if self.peek("{{% endif %}}") {
-                self.consume("{{% endif %}}");
+            } else if self.peek_n(["{{%", "endif", "%}}"]) {
+                self.expect("{{%")?;
+                self.consume_whitespace();
+                self.expect("endif")?;
+                self.consume_whitespace();
+                self.expect("%}}")?;
                 break 'body_parsing_loop;
             } else {
                 body_nodes.push(self.parse_node()?);
@@ -432,7 +477,7 @@ pub(crate) fn tokenize(input: &str) -> Result<AstNode<'_>, ParseError> {
         return Ok(AstNode::Root(vec![]));
     }
     let mut parser = Parser::new(input);
-    let nodes = parser.parse_nodes_until(None)?;
+    let nodes = parser.parse_nodes_until::<3>(None)?; // generic of 3 to avoid extra monomorphization
 
     if !parser.eof() {
         return Err(parser.make_error(ParseErrorKind::Message(format!(
@@ -444,6 +489,34 @@ pub(crate) fn tokenize(input: &str) -> Result<AstNode<'_>, ParseError> {
     Ok(AstNode::Root(nodes))
 }
 
+/// Tests for individual functions in the paresr module.
+#[cfg(test)]
+mod test_utils {
+    use super::*;
+
+    #[test]
+    fn test_peek_any() {
+        let parser = Parser::new("  {{%     if condition %}}");
+        assert!(!parser.peek_n(["{{%", "if"]));
+        assert!(!parser.peek_n(["{{%", "else"]));
+        assert!(!parser.peek_n(["{{%", "if", "else"]));
+        assert!(!parser.peek_n(["{{%", "endif"]));
+
+        let parser = Parser::new("{{%     if condition %}}");
+        assert!(parser.peek_n(["{{%", "if"]));
+        assert!(!parser.peek_n(["{{%", "else"]));
+        assert!(!parser.peek_n(["{{%", "if", "else"]));
+        assert!(!parser.peek_n(["{{%", "endif"]));
+
+        let parser = Parser::new("{{%if condition %}}");
+        assert!(parser.peek_n(["{{%", "if"]));
+        assert!(!parser.peek_n(["{{%", "else"]));
+        assert!(!parser.peek_n(["{{%", "if", "else"]));
+        assert!(!parser.peek_n(["{{%", "endif"]));
+    }
+}
+
+/// Tests for the parser module via tokenizer.
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
@@ -929,9 +1002,7 @@ mod tests {
         let expected = AstNode::Root(vec![AstNode::If {
             condition: Box::new(var!("user.active")),
             body: vec![const_str!("Welcome!")],
-            else_branch: Some(Box::new(AstNode::Root(
-                vec![const_str!("Access Denied.")],
-            ))),
+            else_branch: Some(Box::new(AstNode::Root(vec![const_str!("Access Denied.")]))),
         }]);
         assert_eq!(tokenize(input), Ok(expected));
     }
@@ -1079,9 +1150,7 @@ mod tests {
             body: vec![AstNode::If {
                 condition: Box::new(var!("user.active")),
                 body: vec![var!("user.name")],
-                else_branch: Some(Box::new(AstNode::Root(
-                    vec![const_str!("Inactive")],
-                ))),
+                else_branch: Some(Box::new(AstNode::Root(vec![const_str!("Inactive")]))),
             }],
         }]);
         assert_eq!(tokenize(input), Ok(expected));
@@ -1105,9 +1174,7 @@ mod tests {
                 iterable: "items",
                 body: vec![var!("item")],
             }],
-            else_branch: Some(Box::new(AstNode::Root(
-                vec![const_str!("No items.")],
-            ))),
+            else_branch: Some(Box::new(AstNode::Root(vec![const_str!("No items.")]))),
         }]);
         assert_eq!(tokenize(input).unwrap(), expected);
     }

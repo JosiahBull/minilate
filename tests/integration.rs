@@ -1,6 +1,6 @@
 mod fixtures;
 
-use fixtures::get_engine;
+use fixtures::{generate_random_whitespace, generate_random_whitespace_at_least_one, get_engine};
 use minilate::{Context, MinilateError, MinilateInterface, VariableTy};
 
 #[test]
@@ -36,13 +36,23 @@ fn test_basic_substitution() {
 
 #[test]
 fn test_basic_iteration() {
+    let template = format!(
+        "{{{{%{}for{}cat{}in{}cats{}%}}}}Greetings {{{{{}cat{}}}}}\n{{{{%{}endfor{}%}}}}",
+        generate_random_whitespace(),
+        generate_random_whitespace_at_least_one(),
+        generate_random_whitespace_at_least_one(),
+        generate_random_whitespace_at_least_one(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+    );
+
+    dbg!(&template);
+
     let mut engine = get_engine();
-    engine
-        .add_template(
-            "Template A",
-            "{{% for cat in cats %}}Greetings {{ cat }}\n{{% endfor %}}",
-        )
-        .unwrap();
+    engine.add_template("Template A", template).unwrap();
 
     let context = engine.context("Template A", &Default::default());
     assert_eq!(
@@ -134,13 +144,21 @@ fn test_if_statement() {
 
 #[test]
 fn test_if_else_statement() {
+    let template = format!(
+        "{{{{%{}if{}condition{}%}}}}True{{{{%{}else{}%}}}}False{{{{%{}endif{}%}}}}",
+        generate_random_whitespace(),
+        generate_random_whitespace_at_least_one(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+        generate_random_whitespace(),
+    );
+
+    dbg!(&template);
+
     let mut engine = get_engine();
-    engine
-        .add_template(
-            "IfElse",
-            "{{% if condition %}}True{{% else %}}False{{% endif %}}",
-        )
-        .unwrap();
+    engine.add_template("IfElse", template).unwrap();
 
     // Test with condition = true
     let context = Context::new()

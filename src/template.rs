@@ -82,6 +82,8 @@ impl<'c> Template<'c> {
         // Parse the template content into an AST
         let ast = tokenize(&content)?;
 
+        dbg!(&ast); // Debugging: print the AST structure
+
         // SAFETY: We're using unsafe to convert the lifetime to 'static since we're storing the AST
         // along with the content it references. This is safe because:
         // 1. The AST holds references to the content string
@@ -90,7 +92,11 @@ impl<'c> Template<'c> {
         // 4. The Template is not exposed outside this module with these lifetime relationships
         let ast = unsafe { std::mem::transmute::<AstNode<'_>, AstNode<'static>>(ast) };
 
-        Ok(Self { content, ast, name: None })
+        Ok(Self {
+            content,
+            ast,
+            name: None,
+        })
     }
 
     /// Collects variable names and types that are required by this template.
@@ -145,8 +151,16 @@ impl<'c> Template<'c> {
         let mut direct_inclusions = Vec::new();
         let mut conditional_inclusions = Vec::new();
         let mut for_loop_inclusions = Vec::new();
-        find_template_inclusions(&self.ast, &mut direct_inclusions, &mut conditional_inclusions, &mut for_loop_inclusions, _context, false, None);
-        
+        find_template_inclusions(
+            &self.ast,
+            &mut direct_inclusions,
+            &mut conditional_inclusions,
+            &mut for_loop_inclusions,
+            _context,
+            false,
+            None,
+        );
+
         // Return just the direct inclusions - the engine handles the complex inclusion logic now
         direct_inclusions
     }
@@ -197,7 +211,7 @@ impl<'c> Template<'c> {
     /// let result = template.render::<MinilateEngine>(&context, None).unwrap();
     /// assert_eq!(result, "Hello, World!");
     /// ```
-    pub fn render<'a, E>(&self, context: &Context<'a>, engine: Option<&E>) -> MinilateResult<String> 
+    pub fn render<'a, E>(&self, context: &Context<'a>, engine: Option<&E>) -> MinilateResult<String>
     where
         E: MinilateInterface,
     {
@@ -259,39 +273,47 @@ fn collect_variables_from_node<'a, 'b>(
             // Collect variables from the condition, but mark them as Boolean type
             match condition.as_ref() {
                 AstNode::Variable { name } => {
-                    if !context.contains(name) && !variables.iter().any(|(var_name, _)| *var_name == *name) {
+                    if !context.contains(name)
+                        && !variables.iter().any(|(var_name, _)| *var_name == *name)
+                    {
                         variables.push((name, VariableTy::Boolean));
                     }
-                },
+                }
                 AstNode::Not { condition } => {
                     // For NOT operator, look at its variable and mark as Boolean
                     if let AstNode::Variable { name } = condition.as_ref() {
-                        if !context.contains(name) && !variables.iter().any(|(var_name, _)| *var_name == *name) {
+                        if !context.contains(name)
+                            && !variables.iter().any(|(var_name, _)| *var_name == *name)
+                        {
                             variables.push((name, VariableTy::Boolean));
                         }
                     } else {
                         collect_variables_from_node(condition, variables, context);
                     }
-                },
+                }
                 AstNode::And { left, right } | AstNode::Or { left, right } => {
                     // For AND/OR operators, check both sides for variables
                     if let AstNode::Variable { name } = left.as_ref() {
-                        if !context.contains(name) && !variables.iter().any(|(var_name, _)| *var_name == *name) {
+                        if !context.contains(name)
+                            && !variables.iter().any(|(var_name, _)| *var_name == *name)
+                        {
                             variables.push((name, VariableTy::Boolean));
                         }
                     } else {
                         collect_variables_from_node(left, variables, context);
                     }
-                    
+
                     if let AstNode::Variable { name } = right.as_ref() {
-                        if !context.contains(name) && !variables.iter().any(|(var_name, _)| *var_name == *name) {
+                        if !context.contains(name)
+                            && !variables.iter().any(|(var_name, _)| *var_name == *name)
+                        {
                             variables.push((name, VariableTy::Boolean));
                         }
                     } else {
                         collect_variables_from_node(right, variables, context);
                     }
-                },
-                _ => collect_variables_from_node(condition, variables, context)
+                }
+                _ => collect_variables_from_node(condition, variables, context),
             }
 
             // Collect variables from the body
@@ -331,48 +353,99 @@ fn find_template_inclusions<'a>(
     match node {
         AstNode::Root(children) => {
             for child in children {
-                find_template_inclusions(child, direct_inclusions, conditional_inclusions, for_loop_inclusions, context, in_condition, in_for_loop);
+                find_template_inclusions(
+                    child,
+                    direct_inclusions,
+                    conditional_inclusions,
+                    for_loop_inclusions,
+                    context,
+                    in_condition,
+                    in_for_loop,
+                );
             }
         }
-        AstNode::For { variable: _, iterable, body } => {
+        AstNode::For {
+            variable: _,
+            iterable,
+            body,
+        } => {
             // Process children with for loop context
             for child in body {
-                find_template_inclusions(child, direct_inclusions, conditional_inclusions, for_loop_inclusions, context, in_condition, Some(iterable));
+                find_template_inclusions(
+                    child,
+                    direct_inclusions,
+                    conditional_inclusions,
+                    for_loop_inclusions,
+                    context,
+                    in_condition,
+                    Some(iterable),
+                );
             }
         }
-        AstNode::If { condition, body, else_branch } => {
+        AstNode::If {
+            condition,
+            body,
+            else_branch,
+        } => {
             // Evaluate the condition with the current context (unused for now but kept for future extensions)
             let _condition_result = evaluate_condition(condition, context).unwrap_or(false);
-            
+
             // Check the if body - these are conditional inclusions
             for child in body {
-                find_template_inclusions(child, direct_inclusions, conditional_inclusions, for_loop_inclusions, context, true, in_for_loop);
+                find_template_inclusions(
+                    child,
+                    direct_inclusions,
+                    conditional_inclusions,
+                    for_loop_inclusions,
+                    context,
+                    true,
+                    in_for_loop,
+                );
             }
-            
+
             // Check the else branch if it exists - these are also conditional (with negated condition)
             if let Some(else_node) = else_branch {
-                find_template_inclusions(else_node, direct_inclusions, conditional_inclusions, for_loop_inclusions, context, true, in_for_loop);
+                find_template_inclusions(
+                    else_node,
+                    direct_inclusions,
+                    conditional_inclusions,
+                    for_loop_inclusions,
+                    context,
+                    true,
+                    in_for_loop,
+                );
             }
         }
         AstNode::TemplateInclude { template_name } => {
             // First check if this is in a for loop
             if let Some(iterable) = in_for_loop {
-                if !for_loop_inclusions.iter().any(|(name, _)| *name == *template_name) {
+                if !for_loop_inclusions
+                    .iter()
+                    .any(|(name, _)| *name == *template_name)
+                {
                     for_loop_inclusions.push((template_name, iterable));
                     return; // Don't add to other inclusion types
                 }
             }
-            
+
             // If this is in a conditional branch, add to conditional inclusions
             if in_condition {
-                if !conditional_inclusions.iter().any(|(name, _)| *name == *template_name) {
+                if !conditional_inclusions
+                    .iter()
+                    .any(|(name, _)| *name == *template_name)
+                {
                     conditional_inclusions.push((template_name, true)); // We'll use true by default since we don't have condition info here
                 }
             } else {
                 // Otherwise add to direct inclusions if not already included
-                if !direct_inclusions.contains(template_name) && 
-                   !conditional_inclusions.iter().any(|(name, _)| *name == *template_name) &&
-                   !for_loop_inclusions.iter().any(|(name, _)| *name == *template_name) {
+                if !direct_inclusions.contains(template_name)
+                    && !conditional_inclusions
+                        .iter()
+                        .any(|(name, _)| *name == *template_name)
+                    && !for_loop_inclusions
+                        .iter()
+                        .any(|(name, _)| *name == *template_name)
+                {
                     direct_inclusions.push(template_name);
                 }
             }
@@ -381,8 +454,6 @@ fn find_template_inclusions<'a>(
         _ => {}
     }
 }
-
-
 
 /// Internal function to render an AST node to a String
 ///
@@ -397,7 +468,7 @@ fn render_node<'a, E>(
     context: &Context<'a>,
     output: &mut String,
     engine: Option<&E>,
-) -> MinilateResult<()> 
+) -> MinilateResult<()>
 where
     E: MinilateInterface,
 {
@@ -503,9 +574,12 @@ where
         AstNode::TemplateInclude { template_name } => {
             if let Some(engine) = engine {
                 // Check if we're in a for loop
-                let in_for_loop = context.contains("members") && 
-                                 context.get("members").and_then(|v| v.data()).map_or(false, |d| !d.is_empty());
-                
+                let in_for_loop = context.contains("members")
+                    && context
+                        .get("members")
+                        .and_then(|v| v.data())
+                        .map_or(false, |d| !d.is_empty());
+
                 // For the group_greeting template, we need to make sure the name variable exists
                 if in_for_loop && context.get("name").is_none() {
                     // If rendering the greeting template inside a for loop, provide a name
@@ -550,7 +624,10 @@ where
 /// - String variables: true if non-empty
 /// - Iterable variables: true if non-empty
 /// - Missing variables: false
-pub(crate) fn evaluate_condition<'a>(condition: &AstNode<'a>, context: &Context<'a>) -> MinilateResult<bool> {
+pub(crate) fn evaluate_condition<'a>(
+    condition: &AstNode<'a>,
+    context: &Context<'a>,
+) -> MinilateResult<bool> {
     match condition {
         AstNode::Variable { name } => {
             // Get the variable from context
@@ -608,11 +685,10 @@ pub(crate) fn evaluate_condition<'a>(condition: &AstNode<'a>, context: &Context<
             message: "Template includes cannot be used in conditions".to_string(),
         }),
         // These nodes shouldn't be conditions
-        AstNode::Root(_)
-        | AstNode::Constant { .. }
-        | AstNode::For { .. }
-        | AstNode::If { .. } => Err(MinilateError::RenderError {
-            message: format!("Invalid condition node: {:?}", condition),
-        }),
+        AstNode::Root(_) | AstNode::Constant { .. } | AstNode::For { .. } | AstNode::If { .. } => {
+            Err(MinilateError::RenderError {
+                message: format!("Invalid condition node: {:?}", condition),
+            })
+        }
     }
 }

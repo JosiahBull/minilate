@@ -20,7 +20,7 @@ minijinja = "1.0.12"
 
 # Optimise benchmarks for minimal size.
 [profile.bench]
-opt-level = "s"
+opt-level = 3
 strip = true
 lto = true
 codegen-units = 1

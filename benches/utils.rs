@@ -1,5 +1,5 @@
-use rand::{rngs::StdRng, Rng, SeedableRng};
-use serde_json::{json, Value};
+use rand::{Rng, SeedableRng, rngs::StdRng};
+use serde_json::{Value, json};
 
 /// Generate n random contexts to use in the benchmark
 pub fn generate_random_contexts(n: usize) -> Vec<Value> {

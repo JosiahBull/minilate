@@ -7,7 +7,6 @@ edition = "2024"
 serde = { version = "1", features = ["derive"], optional = true }
 
 [features]
-default = ["serde"]
 serde = ["dep:serde"]
 
 [dev-dependencies]

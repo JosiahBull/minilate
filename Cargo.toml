@@ -2,6 +2,12 @@
 name = "minilate"
 version = "0.1.0"
 edition = "2024"
+description = "A minimal templating library for Rust"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/josiahbull/minilate"
+documentation = "https://docs.rs/minilate"
+keywords = ["template", "templating", "minimal"]
+categories = ["template-engine"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

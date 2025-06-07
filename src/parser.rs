@@ -421,8 +421,6 @@ impl<'a> Parser<'a> {
                 ))));
             }
 
-            dbg!(&self.input[self.pos..]);
-
             if self.peek_n(["{{%", "else", "if"]) {
                 self.expect("{{%")?;
                 self.consume_whitespace();

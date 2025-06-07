@@ -80,7 +80,7 @@ impl<'a> MinilateEngine<'a> {
                 let has_items = context
                     .get(iterable)
                     .and_then(|v| v.data())
-                    .map_or(false, |d| !d.is_empty());
+                    .is_some_and(|d| !d.is_empty());
 
                 // When the iterable has items in the context, we should process the body
                 // and no longer need to collect the iterable variable (since it's available)
@@ -88,8 +88,11 @@ impl<'a> MinilateEngine<'a> {
                     // When the loop has items, we create a simulated context
                     // This creates a simulated context that assumes the loop variable exists
                     let mut loop_context = context.clone();
-                    loop_context.insert(variable, crate::interface::VariableTy::String.with_data("dummy"));
-                    
+                    loop_context.insert(
+                        variable,
+                        crate::interface::VariableTy::String.with_data("dummy"),
+                    );
+
                     // Process the body with the augmented context
                     for child in body {
                         self.collect_inclusion_variables(child, variables, &loop_context, visited);
@@ -107,7 +110,7 @@ impl<'a> MinilateEngine<'a> {
                 visited.push(template_name);
 
                 // If template exists, collect variables from it recursively
-                if let Some(included_template) = self.templates.get(&template_name.to_string()) {
+                if let Some(included_template) = self.templates.get(*template_name) {
                     // First collect variables from this template
                     included_template.collect_variables(variables, context);
 

@@ -9,6 +9,11 @@ set -o errexit -o nounset -o pipefail
 
 # Check that the required tools are available
 command -v cargo >/dev/null 2>&1 || { echo >&2 "cargo is required but it's not installed. Aborting."; exit 1; }
+if ! rustup toolchain list | grep -q 'nightly'; then
+    echo "Nightly Rust toolchain is required but not installed. Please run:"
+    echo "  rustup toolchain install nightly"
+    exit 1
+fi
 
 # Directory setup
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
@@ -54,19 +59,19 @@ trap handle_error ERR
 
 if [ "$FIX_MODE" = true ]; then
     echo -e "\n${GREEN}Running cargo fmt to format code...${NC}"
-    cargo fmt
-    
+    cargo +nightly fmt
+
     echo -e "\n${GREEN}Running cargo clippy with fixes...${NC}"
     cargo clippy --all-targets --all-features --fix --allow-dirty
-    
+
     echo -e "\n${GREEN}Code formatting and linting completed successfully!${NC}"
 else
     echo -e "\n${GREEN}Checking code formatting with cargo fmt...${NC}"
     cargo fmt -- --check
-    
+
     echo -e "\n${GREEN}Checking code with cargo clippy...${NC}"
     cargo clippy --all-targets --all-features -- -D warnings
-    
+
     echo -e "\n${GREEN}Code formatting and linting checks passed successfully!${NC}"
     echo -e "${YELLOW}To automatically fix issues, run with the --fix flag:${NC}"
     echo -e "${YELLOW}  ./scripts/lint.sh --fix${NC}"

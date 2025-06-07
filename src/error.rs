@@ -3,14 +3,23 @@ pub type MinilateResult<T> = std::result::Result<T, MinilateError>;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ParseErrorKind {
-    UnexpectedToken { expected: String, found: String },
+    UnexpectedToken {
+        expected: String,
+        found: String,
+    },
     UnexpectedEOF {
         /// Describes what was expected, e.g., "(expected '}}')"
         expected_what: String,
     },
-    InvalidIdentifier { at_char: String },
-    UnknownKeyword { keyword: String },
-    Expected { description: String },
+    InvalidIdentifier {
+        at_char: String,
+    },
+    UnknownKeyword {
+        keyword: String,
+    },
+    Expected {
+        description: String,
+    },
     Message(String),
 }
 
@@ -76,16 +85,26 @@ impl std::error::Error for ParseError {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MinilateError {
-    TemplateExists { template_name: String },
-    MissingTemplate { template_name: String },
-    MissingVariable { variable_name: String },
-    MissingVariableData { variable_name: String },
+    TemplateExists {
+        template_name: String,
+    },
+    MissingTemplate {
+        template_name: String,
+    },
+    MissingVariable {
+        variable_name: String,
+    },
+    MissingVariableData {
+        variable_name: String,
+    },
     TypeMismatch {
         variable_name: String,
         expected: crate::interface::VariableTy,
         found: crate::interface::VariableTy,
     },
-    RenderError { message: String },
+    RenderError {
+        message: String,
+    },
     Parse(ParseError),
 }
 

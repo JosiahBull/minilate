@@ -71,7 +71,7 @@ if [ "$FIX_MODE" = true ]; then
     echo -e "\n${GREEN}Code formatting and linting completed successfully!${NC}"
 else
     echo -e "\n${GREEN}Checking code formatting with cargo fmt...${NC}"
-    cargo fmt -- --check
+    cargo +nightly fmt -- --check
 
     echo -e "\n${GREEN}Checking code with cargo clippy...${NC}"
     cargo clippy --all-targets --all-features -- -D warnings

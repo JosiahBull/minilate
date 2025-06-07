@@ -383,24 +383,36 @@ fn test_context_collector() {
     assert_eq!(variables.len(), 7);
 
     // Check specific variables
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "var1" && *ty == VariableTy::String));
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "condition" && *ty == VariableTy::Boolean));
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "var2" && *ty == VariableTy::String));
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "var3" && *ty == VariableTy::String));
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "items" && *ty == VariableTy::Iterable));
-    assert!(variables
-        .iter()
-        .any(|(name, ty)| *name == "var4" && *ty == VariableTy::String));
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "var1" && *ty == VariableTy::String)
+    );
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "condition" && *ty == VariableTy::Boolean)
+    );
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "var2" && *ty == VariableTy::String)
+    );
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "var3" && *ty == VariableTy::String)
+    );
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "items" && *ty == VariableTy::Iterable)
+    );
+    assert!(
+        variables
+            .iter()
+            .any(|(name, ty)| *name == "var4" && *ty == VariableTy::String)
+    );
 }
 
 #[test]

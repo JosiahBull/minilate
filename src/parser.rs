@@ -17,7 +17,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &'a str) -> Self {
+    const fn new(input: &'a str) -> Self {
         Parser {
             input,
             pos: 0,
@@ -26,13 +26,14 @@ impl<'a> Parser<'a> {
         }
     }
 
+    #[allow(clippy::arithmetic_side_effects, reason = "usize value used")]
     #[inline]
-    fn current_column(&self) -> usize {
+    const fn current_column(&self) -> usize {
         self.pos - self.line_start_pos + 1
     }
 
     #[inline]
-    fn make_error(&self, kind: ParseErrorKind) -> ParseError {
+    const fn make_error(&self, kind: ParseErrorKind) -> ParseError {
         ParseError {
             line: self.line,
             column: self.current_column(),
@@ -43,8 +44,9 @@ impl<'a> Parser<'a> {
     /// Advances the parser position by char_len bytes, correctly handling
     /// multi-byte characters. Updates line and column numbers if a newline is
     /// encountered.
+    #[allow(clippy::arithmetic_side_effects, reason = "usize value used")]
     #[inline]
-    fn advance_by_char(&mut self, current_char: char, char_len: usize) {
+    const fn advance_by_char(&mut self, current_char: char, char_len: usize) {
         if current_char == '\n' {
             self.line += 1;
             self.line_start_pos = self.pos + char_len;
@@ -55,21 +57,30 @@ impl<'a> Parser<'a> {
     /// Advances the parser position by `len` bytes.
     /// This method assumes that the consumed string `s` does NOT contain newlines.
     /// If it can, line/column tracking will be incorrect. Used for fixed delimiters.
+    #[allow(clippy::arithmetic_side_effects, reason = "usize value used")]
     #[inline]
-    fn advance_bytes_no_newline(&mut self, len: usize) {
+    const fn advance_bytes_no_newline(&mut self, len: usize) {
         self.pos += len;
     }
 
-    fn eof(&self) -> bool {
+    #[inline]
+    const fn eof(&self) -> bool {
         self.pos >= self.input.len()
     }
 
     /// Peek if the remaining input starts with `s`
+    #[inline]
     fn peek(&self, s: &str) -> bool {
-        self.input[self.pos..].starts_with(s)
+        if self.eof() {
+            return false;
+        }
+        self.input
+            .get(self.pos..)
+            .is_some_and(|slice| slice.starts_with(s))
     }
 
     /// Multi-token peek which checks if the remaining input starts with any of the provided tokens, ignoring whitespace between.
+    #[allow(clippy::arithmetic_side_effects, reason = "usize value used")]
     fn peek_n<const N: usize>(&self, tokens: [&str; N]) -> bool {
         if !self.peek(tokens[0]) {
             return false;
@@ -94,6 +105,7 @@ impl<'a> Parser<'a> {
 
     /// Consume `s` if the remaining input starts with it.
     /// Assumes `s` does not contain newlines.
+    #[inline]
     fn consume(&mut self, s: &str) -> bool {
         if self.peek(s) {
             self.advance_bytes_no_newline(s.len());
@@ -112,7 +124,11 @@ impl<'a> Parser<'a> {
 
             // Consume standard whitespace characters
             while !self.eof() {
-                let current_char = self.input[self.pos..].chars().next().unwrap();
+                let current_char = self
+                    .input
+                    .get(self.pos..)
+                    .and_then(|s| s.chars().next())
+                    .expect("Position within bounds");
                 if current_char.is_ascii_whitespace() {
                     self.advance_by_char(current_char, current_char.len_utf8());
                 } else {
@@ -124,7 +140,11 @@ impl<'a> Parser<'a> {
             if self.peek("//") {
                 self.advance_bytes_no_newline(2); // Consume "//"
                 while !self.eof() {
-                    let current_char = self.input[self.pos..].chars().next().unwrap();
+                    let current_char = self
+                        .input
+                        .get(self.pos..)
+                        .and_then(|s| s.chars().next())
+                        .expect("Position within bounds");
                     let char_len = current_char.len_utf8();
                     // We must call advance_by_char to correctly update line count if newline is part of comment termination
                     self.advance_by_char(current_char, char_len);
@@ -154,7 +174,15 @@ impl<'a> Parser<'a> {
                 description: format!(
                     "'{}', found '{}'",
                     s,
-                    &self.input[self.pos..std::cmp::min(self.pos + s.len() + 10, self.input.len())]
+                    self.input
+                        .get(
+                            self.pos
+                                ..std::cmp::min(
+                                    self.pos.saturating_add(s.len().saturating_add(10)),
+                                    self.input.len()
+                                )
+                        )
+                        .unwrap_or("Failed to Serialize Error")
                 ),
             }))
         }
@@ -166,8 +194,16 @@ impl<'a> Parser<'a> {
         let start = self.pos;
         while !self.eof() {
             // Peek char for newline handling before consuming as part of identifier
-            let current_char = self.input[self.pos..].chars().next().unwrap();
-            if current_char.is_ascii_alphanumeric() || current_char == '_' || current_char == '.' {
+            let current_char = self
+                .input
+                .get(self.pos..)
+                .and_then(|s| s.chars().next())
+                .expect("Position within bounds");
+            if current_char.is_ascii_alphanumeric()
+                || current_char == '_'
+                || current_char == '.'
+                || !current_char.is_ascii()
+            {
                 // Identifiers cannot span newlines
                 if current_char == '\n' {
                     break;
@@ -182,7 +218,7 @@ impl<'a> Parser<'a> {
                 description: "identifier".to_string(),
             }))
         } else {
-            Ok(&self.input[start..self.pos])
+            Ok(self.input.get(start..self.pos).expect("Valid slice bounds"))
         }
     }
 
@@ -217,14 +253,22 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            let current_char = self.input[self.pos..].chars().next().unwrap(); // Safe due to !eof()
+            let current_char = self
+                .input
+                .get(self.pos..)
+                .and_then(|s| s.chars().next())
+                .expect("Position within bounds due to !eof()");
             self.advance_by_char(current_char, current_char.len_utf8());
         }
 
         // Even if start_pos == self.pos (e.g. immediate delimiter), a Constant node is fine if it's empty.
         // The logic in parse_nodes_until handles whether to keep empty constants.
         Ok(AstNode::Constant {
-            data: Cow::Borrowed(&self.input[start_pos..self.pos]),
+            data: Cow::Borrowed(
+                self.input
+                    .get(start_pos..self.pos)
+                    .expect("Valid slice bounds"),
+            ),
         })
     }
 
@@ -470,7 +514,7 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub(crate) fn tokenize(input: &str) -> Result<AstNode<'_>, ParseError> {
+pub fn tokenize(input: &str) -> Result<AstNode<'_>, ParseError> {
     if input.is_empty() {
         return Ok(AstNode::Root(vec![]));
     }
@@ -480,7 +524,10 @@ pub(crate) fn tokenize(input: &str) -> Result<AstNode<'_>, ParseError> {
     if !parser.eof() {
         return Err(parser.make_error(ParseErrorKind::Message(format!(
             "Parser did not consume entire input. Remaining: '{}'",
-            &parser.input[parser.pos..]
+            parser
+                .input
+                .get(parser.pos..)
+                .unwrap_or("Failed to Serialize Error")
         ))));
     }
 
@@ -516,6 +563,7 @@ mod test_utils {
 }
 
 /// Tests for the parser module via tokenizer.
+#[allow(clippy::string_slice, reason = "tests")]
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
@@ -534,6 +582,42 @@ mod tests {
                 data: Cow::Borrowed($data),
             }
         };
+    }
+
+    #[test]
+    #[ntest::timeout(100)]
+    fn test_errors_with_emoji_input() {
+        let input = "{{name}} \u{1F600} {{age}}";
+        let result = tokenize(input);
+        assert!(
+            result.is_ok(),
+            "Expected successful parsing, got error: {:?}",
+            result.err()
+        );
+
+        let ast = result.unwrap();
+        assert_eq!(
+            ast,
+            AstNode::Root(vec![var!("name"), const_str!(" \u{1F600} "), var!("age")])
+        );
+    }
+
+    #[test]
+    #[ntest::timeout(100)]
+    fn test_emoji_variable_name() {
+        let input = "{{😀}} is happy";
+        let result = tokenize(input);
+        assert!(
+            result.is_ok(),
+            "Expected successful parsing, got error: {:?}",
+            result.err()
+        );
+
+        let ast = result.unwrap();
+        assert_eq!(
+            ast,
+            AstNode::Root(vec![var!("😀"), const_str!(" is happy")])
+        );
     }
 
     #[test]

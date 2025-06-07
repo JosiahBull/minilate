@@ -1,3 +1,9 @@
+#![allow(
+    clippy::string_slice,
+    clippy::tests_outside_test_module,
+    reason = "tests"
+)]
+
 #[cfg(feature = "serde")]
 mod serde_tests {
     use minilate::{Context, MinilateEngine, MinilateInterface, Template, VariableTy};

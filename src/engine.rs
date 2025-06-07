@@ -124,8 +124,11 @@ impl<'a> MinilateEngine<'a> {
                 }
             }
             // Other node types don't contribute to template inclusion
-            // XXX: should manually list all variants of AstNode
-            _ => {}
+            AstNode::Constant { .. }
+            | AstNode::Variable { .. }
+            | AstNode::Not { .. }
+            | AstNode::And { .. }
+            | AstNode::Or { .. } => {}
         }
     }
 }

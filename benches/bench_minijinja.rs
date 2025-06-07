@@ -1,3 +1,10 @@
+#![allow(
+    clippy::string_slice,
+    clippy::tests_outside_test_module,
+    clippy::unwrap_used,
+    reason = "benchmark"
+)]
+
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use minijinja::Environment;
 

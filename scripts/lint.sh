@@ -50,8 +50,11 @@ echo -e "${BLUE}         Minilate Linting Script                       ${NC}"
 echo -e "${BLUE}=======================================================${NC}"
 
 # Function to handle errors
+# shellcheck disable=SC2317
 handle_error() {
     echo -e "\n${RED}Linting failed!${NC}"
+    echo -e "${YELLOW}To automatically fix issues, run with the --fix flag:${NC}"
+    echo -e "${YELLOW}  ./scripts/lint.sh --fix${NC}"
     exit 1
 }
 
@@ -80,8 +83,6 @@ else
     find . -name "*.sh" -type f -exec shellcheck {} +
 
     echo -e "\n${GREEN}Code formatting and linting checks passed successfully!${NC}"
-    echo -e "${YELLOW}To automatically fix issues, run with the --fix flag:${NC}"
-    echo -e "${YELLOW}  ./scripts/lint.sh --fix${NC}"
 fi
 
 exit 0

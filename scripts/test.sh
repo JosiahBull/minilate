@@ -26,6 +26,7 @@ echo -e "${BLUE}         Minilate Test Script                          ${NC}"
 echo -e "${BLUE}=======================================================${NC}"
 
 # Function to handle errors
+# shellcheck disable=SC2317
 handle_error() {
     echo -e "\n${RED}Tests failed!${NC}"
     exit 1

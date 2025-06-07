@@ -26,22 +26,22 @@ pub enum ParseErrorKind {
 impl std::fmt::Display for ParseErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ParseErrorKind::UnexpectedToken { expected, found } => {
+            Self::UnexpectedToken { expected, found } => {
                 write!(f, "Expected {}, found {}", expected, found)
             }
-            ParseErrorKind::UnexpectedEOF { expected_what } => {
+            Self::UnexpectedEOF { expected_what } => {
                 write!(f, "Unexpected EOF{}", expected_what)
             }
-            ParseErrorKind::InvalidIdentifier { at_char } => {
+            Self::InvalidIdentifier { at_char } => {
                 write!(f, "Invalid identifier starting with '{}'", at_char)
             }
-            ParseErrorKind::UnknownKeyword { keyword } => {
+            Self::UnknownKeyword { keyword } => {
                 write!(f, "Unknown keyword '{}'", keyword)
             }
-            ParseErrorKind::Expected { description } => {
+            Self::Expected { description } => {
                 write!(f, "Expected {}", description)
             }
-            ParseErrorKind::Message(msg) => {
+            Self::Message(msg) => {
                 write!(f, "Parser error: {}", msg)
             }
         }
@@ -52,7 +52,7 @@ impl std::error::Error for ParseErrorKind {}
 
 impl ParseErrorKind {
     pub fn unexpected_eof(expected: Option<String>) -> Self {
-        ParseErrorKind::UnexpectedEOF {
+        Self::UnexpectedEOF {
             expected_what: expected.map_or_else(String::new, |e| format!(" (expected '{}')", e)),
         }
     }
@@ -111,19 +111,19 @@ pub enum MinilateError {
 impl std::fmt::Display for MinilateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MinilateError::TemplateExists { template_name } => {
+            Self::TemplateExists { template_name } => {
                 write!(f, "Template already exists: {}", template_name)
             }
-            MinilateError::MissingTemplate { template_name } => {
+            Self::MissingTemplate { template_name } => {
                 write!(f, "Template not found: {}", template_name)
             }
-            MinilateError::MissingVariable { variable_name } => {
+            Self::MissingVariable { variable_name } => {
                 write!(f, "Variable not found: {}", variable_name)
             }
-            MinilateError::MissingVariableData { variable_name } => {
+            Self::MissingVariableData { variable_name } => {
                 write!(f, "Variable data missing: {}", variable_name)
             }
-            MinilateError::TypeMismatch {
+            Self::TypeMismatch {
                 variable_name,
                 expected,
                 found,
@@ -134,10 +134,10 @@ impl std::fmt::Display for MinilateError {
                     variable_name, expected, found
                 )
             }
-            MinilateError::RenderError { message } => {
+            Self::RenderError { message } => {
                 write!(f, "Rendering error: {}", message)
             }
-            MinilateError::Parse(parse_error) => {
+            Self::Parse(parse_error) => {
                 write!(f, "{}", parse_error)
             }
         }
@@ -147,14 +147,19 @@ impl std::fmt::Display for MinilateError {
 impl std::error::Error for MinilateError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            MinilateError::Parse(parse_error) => Some(parse_error),
-            _ => None,
+            Self::Parse(parse_error) => Some(parse_error),
+            Self::TemplateExists { .. }
+            | Self::MissingTemplate { .. }
+            | Self::MissingVariable { .. }
+            | Self::MissingVariableData { .. }
+            | Self::TypeMismatch { .. }
+            | Self::RenderError { .. } => None,
         }
     }
 }
 
 impl From<ParseError> for MinilateError {
     fn from(error: ParseError) -> Self {
-        MinilateError::Parse(error)
+        Self::Parse(error)
     }
 }

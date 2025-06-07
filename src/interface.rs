@@ -25,7 +25,7 @@ pub struct Variable<'a> {
 }
 
 impl<'a> Variable<'a> {
-    pub fn ty(&self) -> VariableTy {
+    pub const fn ty(&self) -> VariableTy {
         self.ty
     }
 

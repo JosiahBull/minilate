@@ -12,28 +12,10 @@ command -v cargo >/dev/null 2>&1 || { echo >&2 "cargo is required but it's not i
 command -v grep >/dev/null 2>&1 || { echo >&2 "grep is required but it's not installed. Aborting."; exit 1; }
 command -v sed >/dev/null 2>&1 || { echo >&2 "sed is required but it's not installed. Aborting."; exit 1; }
 command -v bc >/dev/null 2>&1 || { echo >&2 "bc is required but it's not installed. Aborting."; exit 1; }
-command -v jq >/dev/null 2>&1 || { echo >&2 "jq is required but it's not installed. Aborting."; exit 1; }
 
 # Directory setup
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-RESULTS_DIR="$ROOT_DIR/benchmark_results"
 cd "$ROOT_DIR"
-
-# Get current git information
-CURRENT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-CURRENT_COMMIT_SHORT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-PREVIOUS_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || echo "unknown")
-PREVIOUS_COMMIT_SHORT=$(git rev-parse --short HEAD~1 2>/dev/null || echo "unknown")
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-# Check if git workspace is dirty
-GIT_DIRTY=""
-if git rev-parse --git-dir >/dev/null 2>&1; then
-    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
-        GIT_DIRTY="true"
-    fi
-fi
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -85,88 +67,6 @@ format_size() {
     fi
 }
 
-# Function to find the most recent benchmark results file
-find_most_recent_results() {
-    local exclude_commit="$1"
-    local most_recent=""
-    local most_recent_time=0
-
-    for results_file in "$RESULTS_DIR"/benchmark_*.json; do
-        if [[ -f "$results_file" ]]; then
-            # Extract commit hash from filename
-            local file_commit=$(basename "$results_file" | sed 's/benchmark_\(.*\)\.json/\1/')
-
-            # Skip if this is the current commit
-            if [[ "$file_commit" == "$exclude_commit" ]]; then
-                continue
-            fi
-
-            # Get file modification time
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                local file_time=$(stat -f%m "$results_file")
-            else
-                local file_time=$(stat -c%Y "$results_file")
-            fi
-
-            if [[ "$file_time" -gt "$most_recent_time" ]]; then
-                most_recent_time="$file_time"
-                most_recent="$results_file"
-            fi
-        fi
-    done
-
-    echo "$most_recent"
-}
-
-# Function to load benchmark results for a specific commit
-load_benchmark_results() {
-    local commit_hash="$1"
-    local results_file="$RESULTS_DIR/benchmark_${commit_hash}.json"
-
-    if [[ -f "$results_file" ]]; then
-        echo "$results_file"
-    else
-        echo ""
-    fi
-}
-
-# Function to save benchmark results
-save_benchmark_results() {
-    local commit_hash="$1"
-    local minilate_time="$2"
-    local handlebars_time="$3"
-    local minijinja_time="$4"
-    local minilate_size="$5"
-    local handlebars_size="$6"
-    local minijinja_size="$7"
-
-    local results_file="$RESULTS_DIR/benchmark_${commit_hash}.json"
-
-    cat > "$results_file" << EOF
-{
-  "timestamp": "$TIMESTAMP",
-  "commit": "$commit_hash",
-  "commit_short": "$(git rev-parse --short "$commit_hash" 2>/dev/null || echo "unknown")",
-  "branch": "$CURRENT_BRANCH",
-  "results": {
-    "minilate": {
-      "time_us": "$minilate_time",
-      "binary_size_bytes": "$minilate_size"
-    },
-    "handlebars": {
-      "time_us": "$handlebars_time",
-      "binary_size_bytes": "$handlebars_size"
-    },
-    "minijinja": {
-      "time_us": "$minijinja_time",
-      "binary_size_bytes": "$minijinja_size"
-    }
-  }
-}
-EOF
-    echo "Benchmark results saved to: $results_file"
-}
-
 echo -e "\n${GREEN}Analyzing binary sizes...${NC}"
 
 # Find the benchmark binaries
@@ -193,6 +93,7 @@ HANDLEBARS_RESULT=$(mktemp)
 MINIJINJA_RESULT=$(mktemp)
 
 # Cleanup on exit
+# shellcheck disable=SC2317
 cleanup() {
     rm -f "$MINILATE_RESULT" "$HANDLEBARS_RESULT" "$MINIJINJA_RESULT"
 }
@@ -214,7 +115,8 @@ extract_time() {
     # Look for lines like: time:   [140.79 µs 141.00 µs 141.16 µs]
     # Extract the middle value (average)
     if grep -q "time:" "$file"; then
-        local time_line=$(grep "time:" "$file" | head -n 1)
+        local time_line
+        time_line=$(grep "time:" "$file" | head -n 1)
         if [[ "$time_line" =~ \[([0-9.]+)\ µs\ ([0-9.]+)\ µs ]]; then
             echo "${BASH_REMATCH[2]}"
         else
@@ -229,43 +131,6 @@ extract_time() {
 MINILATE_TIME=$(extract_time "$MINILATE_RESULT")
 HANDLEBARS_TIME=$(extract_time "$HANDLEBARS_RESULT")
 MINIJINJA_TIME=$(extract_time "$MINIJINJA_RESULT")
-
-# Save current benchmark results only if workspace is clean
-if [[ "$GIT_DIRTY" == "true" ]]; then
-    echo -e "\n${YELLOW}⚠️  Git workspace is dirty - benchmark results will NOT be saved!${NC}"
-else
-    save_benchmark_results "$CURRENT_COMMIT" "$MINILATE_TIME" "$HANDLEBARS_TIME" "$MINIJINJA_TIME" "$MINILATE_SIZE" "$HANDLEBARS_SIZE" "$MINIJINJA_SIZE"
-fi
-
-# Load previous results for comparison
-LAST_RESULTS_FILE=$(find_most_recent_results "$CURRENT_COMMIT")
-PREVIOUS_RESULTS_FILE=$(load_benchmark_results "$PREVIOUS_COMMIT")
-
-# Extract previous benchmark data
-echo -e "\n${GREEN}Loading historical benchmark data...${NC}"
-if [[ -n "$LAST_RESULTS_FILE" && -f "$LAST_RESULTS_FILE" ]]; then
-    echo -e "${YELLOW}Found most recent results: $(basename "$LAST_RESULTS_FILE")${NC}"
-    LAST_MINILATE_TIME=$(jq -r ".results.minilate.time_us // \"N/A\"" "$LAST_RESULTS_FILE" 2>/dev/null || echo "N/A")
-    LAST_HANDLEBARS_TIME=$(jq -r ".results.handlebars.time_us // \"N/A\"" "$LAST_RESULTS_FILE" 2>/dev/null || echo "N/A")
-    LAST_MINIJINJA_TIME=$(jq -r ".results.minijinja.time_us // \"N/A\"" "$LAST_RESULTS_FILE" 2>/dev/null || echo "N/A")
-else
-    echo -e "${YELLOW}No previous benchmark results found${NC}"
-    LAST_MINILATE_TIME="N/A"
-    LAST_HANDLEBARS_TIME="N/A"
-    LAST_MINIJINJA_TIME="N/A"
-fi
-
-if [[ -n "$PREVIOUS_RESULTS_FILE" && -f "$PREVIOUS_RESULTS_FILE" ]]; then
-    echo -e "${YELLOW}Found previous commit results: $(basename "$PREVIOUS_RESULTS_FILE")${NC}"
-    PREV_MINILATE_TIME=$(jq -r ".results.minilate.time_us // \"N/A\"" "$PREVIOUS_RESULTS_FILE" 2>/dev/null || echo "N/A")
-    PREV_HANDLEBARS_TIME=$(jq -r ".results.handlebars.time_us // \"N/A\"" "$PREVIOUS_RESULTS_FILE" 2>/dev/null || echo "N/A")
-    PREV_MINIJINJA_TIME=$(jq -r ".results.minijinja.time_us // \"N/A\"" "$PREVIOUS_RESULTS_FILE" 2>/dev/null || echo "N/A")
-else
-    echo -e "${YELLOW}No benchmark results found for previous commit (${PREVIOUS_COMMIT_SHORT})${NC}"
-    PREV_MINILATE_TIME="N/A"
-    PREV_HANDLEBARS_TIME="N/A"
-    PREV_MINIJINJA_TIME="N/A"
-fi
 
 # Calculate relative performance and size (using Minilate as baseline)
 if [[ "$MINILATE_TIME" != "0" && "$HANDLEBARS_TIME" != "0" && "$MINIJINJA_TIME" != "0" ]]; then
@@ -327,49 +192,27 @@ print_line() {
     printf "%0.s-" {1..15}
     printf "+"
     printf "%0.s-" {1..13}
-    printf "+"
-    printf "%0.s-" {1..11}
-    printf "+"
-    printf "%0.s-" {1..13}
     printf "+\n"
 }
 
-# Print current git info
-echo -e "${YELLOW}Current commit: ${CURRENT_COMMIT_SHORT} (${CURRENT_BRANCH})${NC}"
-echo -e "${YELLOW}Previous commit: ${PREVIOUS_COMMIT_SHORT}${NC}"
-
 # Print table header
 print_line
-printf "| %-10s | %-13s | %-11s | %-13s | %-11s | %-9s | %-11s |\n" "Engine" "Binary Size" "Rel. Size" "Time/Template" "Rel. Perf." "Last Run" "Prev Commit"
+printf "| %-10s | %-13s | %-11s | %-13s | %-11s |\n" "Engine" "Binary Size" "Rel. Size" "Time/Template" "Rel. Perf."
 print_line
 
-# Format historical times for display
-format_time_display() {
-    local time="$1"
-    if [[ "$time" != "N/A" && "$time" != "0" ]]; then
-        echo "${time} µs"
-    else
-        echo "N/A"
-    fi
-}
-
 # Print table rows
-printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
-    "Minilate" "$(format_size "$MINILATE_SIZE")" "$MINILATE_SIZE_RELATIVE" "${MINILATE_TIME_DISPLAY}" "$MINILATE_RELATIVE" \
-    "$(format_time_display "$LAST_MINILATE_TIME")" "$(format_time_display "$PREV_MINILATE_TIME")"
+printf "| %-10s | %-13s | %-11s | %-13s  | %-11s |\n" \
+    "Minilate" "$(format_size "$MINILATE_SIZE")" "$MINILATE_SIZE_RELATIVE" "${MINILATE_TIME_DISPLAY}" "$MINILATE_RELATIVE"
 
-printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
-    "Handlebars" "$(format_size "$HANDLEBARS_SIZE")" "$HANDLEBARS_SIZE_RELATIVE" "${HANDLEBARS_TIME_DISPLAY}" "$HANDLEBARS_RELATIVE" \
-    "$(format_time_display "$LAST_HANDLEBARS_TIME")" "$(format_time_display "$PREV_HANDLEBARS_TIME")"
+printf "| %-10s | %-13s | %-11s | %-13s  | %-11s |\n" \
+    "Handlebars" "$(format_size "$HANDLEBARS_SIZE")" "$HANDLEBARS_SIZE_RELATIVE" "${HANDLEBARS_TIME_DISPLAY}" "$HANDLEBARS_RELATIVE"
 
-printf "| %-10s | %-13s | %-11s | %-13s  | %-11s | %-9s | %-11s |\n" \
-    "MiniJinja" "$(format_size "$MINIJINJA_SIZE")" "$MINIJINJA_SIZE_RELATIVE" "${MINIJINJA_TIME_DISPLAY}" "$MINIJINJA_RELATIVE" \
-    "$(format_time_display "$LAST_MINIJINJA_TIME")" "$(format_time_display "$PREV_MINIJINJA_TIME")"
+printf "| %-10s | %-13s | %-11s | %-13s  | %-11s |\n" \
+    "MiniJinja" "$(format_size "$MINIJINJA_SIZE")" "$MINIJINJA_SIZE_RELATIVE" "${MINIJINJA_TIME_DISPLAY}" "$MINIJINJA_RELATIVE"
 
 # Print table footer
 print_line
 
 echo -e "\n${YELLOW}Note: Relative Performance and Relative Size use Minilate as the baseline (1.00x).${NC}"
-echo -e "${YELLOW}Prev Commit: Benchmark results from the previous commit (${PREVIOUS_COMMIT_SHORT}).${NC}"
 
 exit 0

@@ -144,7 +144,7 @@ impl<'c> Template<'c> {
     ///
     /// This method is only used for debugging and testing purposes.
     /// The actual template inclusion processing happens in the engine.
-    pub fn find_template_inclusions<'a>(&'a self, _context: &Context<'_>) -> Vec<&'a str> {
+    pub fn find_template_inclusions<'a>(&'a self, context: &Context<'_>) -> Vec<&'a str> {
         // Collect only direct inclusions for simple testing purposes
         let mut direct_inclusions = Vec::new();
         let mut conditional_inclusions = Vec::new();
@@ -154,7 +154,7 @@ impl<'c> Template<'c> {
             &mut direct_inclusions,
             &mut conditional_inclusions,
             &mut for_loop_inclusions,
-            _context,
+            context,
             false,
             None,
         );
@@ -311,7 +311,13 @@ fn collect_variables_from_node<'a>(
                         collect_variables_from_node(right, variables, context);
                     }
                 }
-                _ => collect_variables_from_node(condition, variables, context),
+                AstNode::Root(_)
+                | AstNode::Constant { .. }
+                | AstNode::For { .. }
+                | AstNode::If { .. }
+                | AstNode::TemplateInclude { .. } => {
+                    collect_variables_from_node(condition, variables, context);
+                }
             }
 
             // Collect variables from the body
@@ -449,7 +455,11 @@ fn find_template_inclusions<'a>(
             }
         }
         // Other node types don't contain template inclusions
-        _ => {}
+        AstNode::Constant { .. }
+        | AstNode::Variable { .. }
+        | AstNode::Not { .. }
+        | AstNode::And { .. }
+        | AstNode::Or { .. } => {}
     }
 }
 
@@ -491,7 +501,7 @@ where
                                     variable_name: name.to_string(),
                                 });
                             }
-                            output.push_str(data)
+                            output.push_str(data);
                         }
                         None => {
                             return Err(MinilateError::MissingVariableData {
@@ -622,7 +632,7 @@ where
 /// - String variables: true if non-empty
 /// - Iterable variables: true if non-empty
 /// - Missing variables: false
-pub(crate) fn evaluate_condition<'a>(
+pub fn evaluate_condition<'a>(
     condition: &AstNode<'a>,
     context: &Context<'a>,
 ) -> MinilateResult<bool> {

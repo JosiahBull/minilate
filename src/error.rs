@@ -50,27 +50,18 @@ pub type MinilateResult<T> = std::result::Result<T, MinilateError>;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ParseErrorKind {
     /// Found an unexpected token in the template, provides a hint about what was expected.
-    UnexpectedToken {
-        expected: String,
-        found: String,
-    },
+    UnexpectedToken { expected: String, found: String },
     /// The parser reached the end of the input unexpectedly, possibly missing a closing brace or similar
     UnexpectedEOF {
         /// Describes what was expected, e.g., "(expected '}}')"
         expected_what: String,
     },
     /// An identifier was expected, but we weren't able to parse it for some reason.
-    InvalidIdentifier {
-        at_char: String,
-    },
+    InvalidIdentifier { at_char: String },
     /// An unknown keyword was encountered in the template.
-    UnknownKeyword {
-        keyword: String,
-    },
+    UnknownKeyword { keyword: String },
     /// A generic expected error, used for cases where the parser expects something specific.
-    Expected {
-        description: String,
-    },
+    Expected { description: String },
     /// A generic message for parser errors that don't fit into the other categories.
     Message(String),
 }
@@ -140,21 +131,13 @@ impl std::error::Error for ParseError {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MinilateError {
     /// Adding this template would overwrite an existing one.
-    TemplateExists {
-        template_name: String,
-    },
+    TemplateExists { template_name: String },
     /// The requested template was not found.
-    MissingTemplate {
-        template_name: String,
-    },
+    MissingTemplate { template_name: String },
     /// A variable was referenced but not found in the context.
-    MissingVariable {
-        variable_name: String,
-    },
+    MissingVariable { variable_name: String },
     /// A variable was referenced but its data was not provided.
-    MissingVariableData {
-        variable_name: String,
-    },
+    MissingVariableData { variable_name: String },
     /// A variable was found, but its type did not match the expected type.
     TypeMismatch {
         variable_name: String,
@@ -162,9 +145,7 @@ pub enum MinilateError {
         found: crate::interface::VariableTy,
     },
     /// An error occurred during the rendering process, with a message describing the issue.
-    RenderError {
-        message: String,
-    },
+    RenderError { message: String },
     /// A parsing error occurred, containing the details of the error.
     Parse(ParseError),
 }

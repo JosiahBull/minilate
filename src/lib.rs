@@ -12,5 +12,5 @@ mod template;
 pub use engine::MinilateEngine;
 pub use error::MinilateError;
 pub(crate) use error::MinilateResult;
-pub use interface::{Context, MinilateInterface, VariableTy};
+pub use interface::{Context, MinilateInterface, Variable, VariableTy};
 pub use template::Template;

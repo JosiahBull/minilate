@@ -19,7 +19,6 @@ env:
   CARGO_NET_RETRY: 10
   CI: 1
   RUST_BACKTRACE: short
-  RUSTFLAGS: "-W rust-2021-compatibility"
   RUSTUP_MAX_RETRIES: 10
   CARGO_MUTANTS_MINIMUM_TEST_TIMEOUT: 60
 
@@ -35,14 +34,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
           components: rustfmt
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.85 # Also update .rust-toolchain.toml and Cargo.toml
-          components: clippy
+      - uses: dtolnay/rust-toolchain@1.85 # Also update .rust-toolchain.toml and Cargo.toml
 
       - name: Show Cargo and rustc version
         run: |

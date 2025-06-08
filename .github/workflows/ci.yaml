@@ -43,6 +43,9 @@ jobs:
           cargo --version
           rustc --version
 
+      - name: Install cargo semver
+        run: cargo install cargo-semver-checks
+
       - name: Linting
         run: ./scripts/lint.sh
       - name: Test

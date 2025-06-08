@@ -16,6 +16,12 @@ if ! rustup toolchain list | grep -q 'nightly'; then
     exit 1
 fi
 
+if ! cargo semver-checks --help >/dev/null 2>&1; then
+    echo "cargo semver-checks is required but not installed. Please run:"
+    echo "  cargo install cargo-semver-checks"
+    exit 1
+fi
+
 # Directory setup
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$ROOT_DIR"

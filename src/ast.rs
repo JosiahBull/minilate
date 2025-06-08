@@ -1,3 +1,27 @@
+//! Defines the Abstract Syntax Tree (AST) structures used by Minilate.
+//!
+//! The AST is the internal representation of a parsed template, capturing its
+//! structure and components like constant text, variables, control flow (if/for),
+//! and template inclusions.
+//!
+//! The [`crate::parser`] module is responsible for generating these AST nodes
+//! from a template string. The [`crate::engine::MinilateEngine`] then uses this
+//! AST to render the template with a given [`crate::interface::Context`].
+//!
+//! # Key Structures
+//!
+//! - [`AstNode`]: The core enum representing different types of nodes in the template.
+//!   - `AstNode::Root`: The top-level node of a parsed template.
+//!   - `AstNode::Constant`: Represents a block of static text.
+//!   - `AstNode::Variable`: Represents a `{{ variable }}` substitution.
+//!   - `AstNode::For`: Represents a `{{% for item in items %}}` loop.
+//!   - `AstNode::If`: Represents an `{{% if condition %}}` block, potentially with `else` or `else if` branches.
+//!   - `AstNode::Not`, `AstNode::And`, `AstNode::Or`: Represent logical operations within conditions.
+//!   - `AstNode::TemplateInclude`: Represents a `{{<< sub_template.tmpl }}` inclusion.
+//!
+//! The structure of the AST allows for efficient traversal during rendering and
+//! context analysis (e.g., determining required variables).
+
 use std::borrow::Cow;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

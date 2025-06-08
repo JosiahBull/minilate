@@ -1,3 +1,74 @@
+//! # Minilate Template Representation (`template.rs`)
+//!
+//! This module defines the [`Template`] struct, which is a core component of the
+//! Minilate templating engine. A `Template` encapsulates a parsed template string,
+//! holding its original content and its Abstract Syntax Tree (AST) representation
+//! (see [`crate::ast::AstNode`]).
+//!
+//! ## Overview
+//!
+//! Once a template string is parsed (typically by [`crate::parser::tokenize()`]),
+//! it is converted into a `Template` instance. This instance can then be used to:
+//!
+//! - **Render** the template with a given [`crate::interface::Context`], producing a final string output.
+//! - **Collect variables** to understand what data is required by the template.
+//! - **Analyze template inclusions** (though the primary handling of inclusions occurs within the [`crate::engine::MinilateEngine`]).
+//!
+//! The `Template` struct itself stores the template content (as a `Cow<'a, str>` to
+//! allow borrowing or owning the string) and the `AstNode<'static>` which is the root
+//! of the parsed template. The lifetime of the AST nodes is tied to the lifetime of
+//! the `Template` instance itself, ensuring that string slices within the AST (like
+//! variable names or constant text) remain valid.
+//!
+//! ## Key Methods
+//!
+//! - [`Template::new()`]: Constructs a new `Template` by parsing the provided content string.
+//! - [`Template::render()`]: Renders the template using a given context and an optional engine (for handling inclusions).
+//! - [`Template::collect_variables()`]: Gathers a list of variables used within the template that are not present in a given context.
+//!
+//! ## Example Usage
+//!
+//! ```rust
+//! use minilate::{Template, Context, VariableTy, MinilateEngine, MinilateInterface, MinilateResult};
+//!
+//! # fn main() -> MinilateResult<()> {
+//! // 1. Create a new template from a string
+//! // The content string is parsed into an AST internally.
+//! let template_content = "Hello, {{ name }}! Your balance is ${{ balance }}.";
+//! let template = Template::new(template_content.to_string())?;
+//!
+//! // 2. Prepare a context with data
+//! let mut context = Context::new();
+//! context.insert("name", VariableTy::String.with_data("Alice"));
+//! context.insert("balance", VariableTy::String.with_data("100.50"));
+//!
+//! // 3. Render the template
+//! // For rendering that might involve template inclusions `{{<< ... }}`,
+//! // an engine instance would be needed. For simple templates, `None` can be passed.
+//! let mut engine = MinilateEngine::new(); // Or any MinilateInterface implementor
+//! engine.add_template("dummy_template_for_example_only", template_content)?; // Add it to engine if it was meant to be used by engine
+//!
+//! // Typically, you'd render through the engine if inclusions are possible:
+//! // let output = engine.render("my_template_name", Some(&context))?;
+//! // Or render a standalone template instance directly if no inclusions are involved
+//! // or if the engine is passed explicitly:
+//! let output = template.render(&context, Some(&engine))?;
+//!
+//! assert_eq!(output, "Hello, Alice! Your balance is $100.50.");
+//!
+//! // 4. Collect required variables
+//! let mut variables_needed = Vec::new();
+//! let empty_context = Context::new();
+//! template.collect_variables(&mut variables_needed, &empty_context);
+//! // variables_needed would contain ("name", VariableTy::String) and ("balance", VariableTy::String)
+//! assert!(variables_needed.iter().any(|(name, _)| *name == "name"));
+//! assert!(variables_needed.iter().any(|(name, _)| *name == "balance"));
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! The `Template` struct is fundamental for turning raw template strings into executable
+//! and analyzable structures within the Minilate system.
 use std::borrow::Cow;
 
 use crate::ast::AstNode;

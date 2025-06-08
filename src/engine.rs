@@ -1,3 +1,41 @@
+//! Implements the core templating engine for Minilate.
+//!
+//! This module provides [`MinilateEngine`], the primary struct responsible for managing
+//! and rendering templates. The engine allows you to:
+//!
+//! - Add new templates using [`MinilateEngine::add_template()`].
+//! - Render existing templates with a given [`Context`] using [`MinilateEngine::render()`].
+//! - Analyze templates to determine required context variables using [`MinilateEngine::context()`].
+//!
+//! The engine works by parsing template strings into an Abstract Syntax Tree (AST)
+//! (see [`crate::ast::AstNode`]) via the [`crate::template::Template`] struct.
+//! During rendering, it traverses this AST, substituting variables, evaluating
+//! conditionals, processing loops, and handling template inclusions.
+//!
+//! # Example Usage
+//!
+//! ```rust
+//! use minilate::{MinilateEngine, Context, VariableTy, MinilateInterface};
+//!
+//! // 1. Create a new engine instance
+//! let mut engine = MinilateEngine::new();
+//!
+//! // 2. Add a template to the engine
+//! engine.add_template("greeting", "Hello, {{ name }}!").unwrap();
+//!
+//! // 3. Prepare a context with necessary variables
+//! let mut context = Context::new();
+//! context.insert("name", VariableTy::String.with_data("Minilate User"));
+//!
+//! // 4. Render the template
+//! let output = engine.render("greeting", Some(&context)).unwrap();
+//!
+//! assert_eq!(output, "Hello, Minilate User!");
+//! ```
+//!
+//! The [`MinilateEngine`] implements the [`MinilateInterface`] trait, which defines
+//! the public API for interacting with templating engines in Minilate.
+
 use std::borrow::Cow;
 use std::collections::HashMap;
 

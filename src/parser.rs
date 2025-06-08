@@ -1,3 +1,63 @@
+//! # Minilate Parser (`parser.rs`)
+//!
+//! This module is responsible for parsing Minilate template strings into an
+//! Abstract Syntax Tree (AST), represented by [`crate::ast::AstNode`].
+//! It handles the syntax of the Minilate templating language, including:
+//!
+//! - Variable substitutions: `{{ variable_name }}`
+//! - Control flow blocks: `{{% if condition %}}...{{% endif %}}`, `{{% for var in iterable %}}...{{% endfor %}}`
+//! - Template inclusions: `{{<< sub_template.tmpl }}`
+//! - Escaping: `\{{` and `\{{%`
+//! - Line comments: `// this is a comment` (outside of tags)
+//!
+//! The main entry point for parsing is the [`tokenize()`] function, which takes a
+//! template string as input and returns a `Result<AstNode<'_>, ParseError>`.
+//! If parsing is successful, it yields an [`AstNode::Root`] containing the parsed
+//! structure of the template. If syntax errors are encountered, a [`ParseError`]
+//! is returned, providing details about the error location (line and column) and
+//! its nature ([`ParseErrorKind`]).
+//!
+//! ## Parsing Strategy
+//!
+//! The parser uses a combination of techniques:
+//! - It iteratively consumes the input, distinguishing between constant text,
+//!   variable tags, and control flow tags.
+//! - For conditional expressions within `if` statements (`!`, `&&`, `||`), it employs
+//!   a recursive descent parser to handle operator precedence correctly.
+//!
+//! The parser is designed to borrow the input string where possible (e.g., for
+//! variable names and constant blocks without escapes) to minimize allocations.
+//!
+//! ## Example
+//!
+//! ```rust
+//! use minilate::parser::tokenize; // Assuming tokenize is made public or used via a facade
+//! use minilate::ast::AstNode;
+//! use std::borrow::Cow;
+//!
+//! # fn run_example() -> Result<(), minilate::error::ParseError> {
+//! let template_string = "Hello, {{ name }}! {{% if show_details %}}Details here.{{% endif %}}";
+//! let ast_root_result = tokenize(template_string);
+//!
+//! match ast_root_result {
+//!     Ok(AstNode::Root(nodes)) => {
+//!         // `nodes` would contain AstNode::Constant, AstNode::Variable, and AstNode::If
+//!         assert!(nodes.len() > 1);
+//!         println!("Successfully parsed template!");
+//!     }
+//!     Ok_ => panic!("Expected AstNode::Root"), // Should be AstNode::Root
+//!     Err(parse_error) => {
+//!         eprintln!("Failed to parse template: {}", parse_error);
+//!     }
+//! }
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! This module works in conjunction with [`crate::ast`] (for the tree structure)
+//! and [`crate::error`] (for error reporting). The resulting AST is then used by
+//! the [`crate::engine::MinilateEngine`] for rendering.
+
 use std::borrow::Cow;
 
 use crate::{

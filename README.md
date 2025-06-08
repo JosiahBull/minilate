@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/minilate.svg)](https://crates.io/crates/minilate)
 [![Documentation](https://docs.rs/minilate/badge.svg)](https://docs.rs/minilate)
 [![Tests](https://github.com/JosiahBull/minilate/workflows/Tests/badge.svg)](https://github.com/JosiahBull/minilate/actions)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)
 
 A templating engine prioritising minimal binary size and speed at the cost of feature set.
 
@@ -27,7 +27,7 @@ assert_eq!(result, "Hello, World!");
 
 ## ⚡ Performance
 
-Minilate is designed when only need a a core feature set and care deeply about performance and binary size.
+Minilate is designed for only a core feature set, but maximised performance and minimised binary size.
 
 | Engine     | Binary Size   | Rel. Size   | Time/Template | Rel. Perf.  |
 |------------|---------------|-------------|---------------|-------------|
@@ -62,12 +62,14 @@ minilate = "0.1"
 ## 📖 Examples
 
 ### Basic Variable Substitution
+
 ```tmpl
 Welcome to {{ site_name }}!
 Your username is {{ user.name }}.
 ```
 
 ### Conditional Logic
+
 ```tmpl
 {{% if user && is_active %}}
   Hello, {{ user }}! You have {{ message_count }} new messages.
@@ -79,6 +81,7 @@ Your username is {{ user.name }}.
 ```
 
 ### Loops and Nested Data
+
 ```tmpl
 # Shopping Cart
 {{% if items %}}
@@ -96,6 +99,7 @@ Your cart is empty.
 ```
 
 ### Template Inclusion
+
 ```tmpl
 {{<< header.tmpl }}
 
@@ -106,6 +110,7 @@ Your cart is empty.
 ```
 
 ### Complex Example
+
 ```tmpl
 # User Profile: {{ user.name }}
 
@@ -135,6 +140,7 @@ To run benchmarks locally:
 ```
 
 This script:
+
 - Builds all benchmark binaries
 - Runs performance tests against Minilate, Handlebars, and MiniJinja
 - Analyzes binary sizes
@@ -142,6 +148,7 @@ This script:
 - Saves results for historical tracking
 
 The benchmark tests template rendering with:
+
 - 100 different contexts
 - 50 iterations per engine
 - Complex templates with conditionals, loops, and nested data
@@ -150,9 +157,9 @@ The benchmark tests template rendering with:
 
 Licensed under either of
 
- * Apache License, Version 2.0
+- Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0))
- * MIT license
+- MIT license
    ([LICENSE-MIT](LICENSE-MIT) or [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT))
 
 at your option.

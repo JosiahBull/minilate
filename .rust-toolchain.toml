@@ -1,3 +1,4 @@
+# Also update ci.yaml and Cargo.toml
 [toolchain]
 channel = "stable"
 version = "1.85"

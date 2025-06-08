@@ -35,8 +35,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable,nightly
-          components: rustfmt,clippy
+          toolchain: 1.85 # Also update .rust-toolchain.toml and Cargo.toml
+          components: clippy
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: rustfmt
 
       - name: Show Cargo and rustc version
         run: |

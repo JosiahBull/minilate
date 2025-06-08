@@ -49,7 +49,7 @@ pub type MinilateResult<T> = std::result::Result<T, MinilateError>;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ParseErrorKind {
-    /// Found an unexpected token in the tempalate, provides a hint about what was expected.
+    /// Found an unexpected token in the template, provides a hint about what was expected.
     UnexpectedToken {
         expected: String,
         found: String,

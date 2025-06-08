@@ -24,7 +24,7 @@ pub struct Variable<'a> {
     data: Option<Cow<'a, str>>,
 }
 
-impl<'a> Variable<'a> {
+impl Variable<'_> {
     pub const fn ty(&self) -> VariableTy {
         self.ty
     }

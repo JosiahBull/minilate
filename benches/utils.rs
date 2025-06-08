@@ -16,18 +16,18 @@ pub fn generate_random_contexts(n: usize) -> Vec<Value> {
 
     for _ in 0..n {
         let name = random_string(&mut rng, 5, 10);
-        let age = rng.gen_range(18..80);
-        let is_active = rng.gen_bool(0.7);
+        let age = rng.random_range(18..80);
+        let is_active = rng.random_bool(0.7);
 
-        let items_count = rng.gen_range(3..10);
+        let items_count = rng.random_range(3..10);
         let mut items = Vec::with_capacity(items_count);
         for _ in 0..items_count {
             let item_name = random_string(&mut rng, 3, 8);
-            let item_value = rng.gen_range(10..1000);
+            let item_value = rng.random_range(10..1000);
             items.push(json!({
                 "name": item_name,
                 "value": item_value,
-                "special": rng.gen_bool(0.3)
+                "special": rng.random_bool(0.3)
             }));
         }
 
@@ -38,8 +38,8 @@ pub fn generate_random_contexts(n: usize) -> Vec<Value> {
                 "active": is_active
             },
             "items": items,
-            "show_details": rng.gen_bool(0.8),
-            "has_access": rng.gen_bool(0.6),
+            "show_details": rng.random_bool(0.8),
+            "has_access": rng.random_bool(0.6),
         }));
     }
 
@@ -49,11 +49,11 @@ pub fn generate_random_contexts(n: usize) -> Vec<Value> {
 /// Generate a random string with length between min and max
 fn random_string(rng: &mut StdRng, min_len: usize, max_len: usize) -> String {
     let charset = "abcdefghijklmnopqrstuvwxyz";
-    let len = rng.gen_range(min_len..=max_len);
+    let len = rng.random_range(min_len..=max_len);
 
     (0..len)
         .map(|_| {
-            let idx = rng.gen_range(0..charset.len());
+            let idx = rng.random_range(0..charset.len());
             charset.chars().nth(idx).unwrap()
         })
         .collect()

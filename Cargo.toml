@@ -1,13 +1,25 @@
 [package]
 name = "minilate"
+description = "A minimal templating library for Rust"
 version = "0.1.0"
 edition = "2024"
-description = "A minimal templating library for Rust"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/josiahbull/minilate"
 documentation = "https://docs.rs/minilate"
 keywords = ["template", "templating", "minimal"]
 categories = ["template-engine"]
+exclude = [
+    "benches/*",
+    ".github/*",
+    "scripts/*",
+    "tests/*",
+    ".devcontainer/*",
+    ".clippy.toml",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+    ".rustfmt.toml",
+    "rennovate.json",
+]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }
@@ -16,12 +28,12 @@ serde = { version = "1", features = ["derive"], optional = true }
 serde = ["dep:serde"]
 
 [dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
-rand = "0.8"
-serde_json = "1.0"
-handlebars = "5.0.0"
-minijinja = "1.0.12"
-ntest = "0.9.3"
+criterion = { version = "0.6", features = ["html_reports"] }
+rand = "0.9"
+serde_json = "1"
+handlebars = "6"
+minijinja = "2"
+ntest = "0.9"
 
 # Optimise benchmarks for minimal size.
 [profile.bench]

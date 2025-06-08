@@ -9,6 +9,8 @@ on:
       - "mutants_attrs/**"
       - "**/src/**"
       - "**/tests/**"
+      - "scripts/lint.sh"
+      - "scripts/test.sh"
 
 # see https://matklad.github.io/2021/09/04/fast-rust-builds.html
 env:

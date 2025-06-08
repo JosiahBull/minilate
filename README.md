@@ -29,13 +29,13 @@ assert_eq!(result, "Hello, World!");
 
 Minilate is designed when only need a a core feature set and care deeply about performance and binary size.
 
-| Engine     | Binary Size   | Rel. Size   | Time/Template | Rel. Perf.  | Last Run  |
-|------------|---------------|-------------|---------------|-------------|-----------|
-| Minilate   | 1.75 MB       | 1.00x       | 166.48 µs     | 1.00x       | 123.45 µs |
-| Handlebars | 1.96 MB       | 1.12x       | 611.21 µs     | 3.67x       | 440.08 µs |
-| MiniJinja  | 2.15 MB       | 1.22x       | 524.04 µs     | 3.15x       | 369.27 µs |
+| Engine     | Binary Size   | Rel. Size   | Time/Template | Rel. Perf.  |
+|------------|---------------|-------------|---------------|-------------|
+| Minilate   | 1.56 MB       | 1.00x       | 205.08 µs     | 1.00x       |
+| Handlebars | 1.75 MB       | 1.12x       | 776.79 µs     | 3.79x       |
+| MiniJinja  | 2.00 MB       | 1.28x       | 438.03 µs     | 2.154       |
 
-> 📊 Minilate achieves **12-22% smaller** binaries while being **~3× faster** than alternatives.
+> 📊 Minilate achieves **12-28% smaller** binaries while being **~2-4x faster** than alternatives.
 
 *Benchmarks: 100 complex templates × 50 iterations each. Template includes conditionals, loops, and nested data. See [Benchmarking](#-benchmarking) for details.*
 

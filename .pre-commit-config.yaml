@@ -20,6 +20,7 @@ repos:
     hooks:
       - id: lint
         name: Run linting script
-        entry: ./scripts/format.sh
         language: script
-        types: [file]
+        entry: ./scripts/lint.sh
+        files: "\\.rs$"
+        pass_filenames: false

@@ -36,12 +36,20 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-          components: rustfmt,clippy
+          components: rustfmt
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.85 # Also update .rust-toolchain.toml and Cargo.toml
+          components: clippy
 
       - name: Show Cargo and rustc version
         run: |
           cargo --version
           rustc --version
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
 
       - name: Linting
         run: ./scripts/lint.sh

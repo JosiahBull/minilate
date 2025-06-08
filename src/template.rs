@@ -209,7 +209,7 @@ impl<'c> Template<'c> {
     /// let result = template.render::<MinilateEngine>(&context, None).unwrap();
     /// assert_eq!(result, "Hello, World!");
     /// ```
-    pub fn render<'a, E>(&self, context: &Context<'a>, engine: Option<&E>) -> MinilateResult<String>
+    pub fn render<E>(&self, context: &Context<'_>, engine: Option<&E>) -> MinilateResult<String>
     where
         E: MinilateInterface,
     {

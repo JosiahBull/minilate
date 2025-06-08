@@ -153,7 +153,7 @@ impl Default for MinilateEngine<'_> {
     }
 }
 
-impl<'c> MinilateInterface for MinilateEngine<'c> {
+impl MinilateInterface for MinilateEngine<'_> {
     /// Adds a new template to the engine with the given name and content.
     ///
     /// # Arguments

@@ -71,6 +71,9 @@ if [ "$FIX_MODE" = true ]; then
     echo -e "\n${GREEN}Running shellcheck on shell scripts...${NC}"
     find . -name "*.sh" -type f -exec shellcheck {} +
 
+    echo -e "\n${GREEN}Running cargo semver checks...${NC}"
+    cargo semver-checks
+
     echo -e "\n${GREEN}Code formatting and linting completed successfully!${NC}"
 else
     echo -e "\n${GREEN}Checking code formatting with cargo fmt...${NC}"
@@ -81,6 +84,9 @@ else
 
     echo -e "\n${GREEN}Running shellcheck on shell scripts...${NC}"
     find . -name "*.sh" -type f -exec shellcheck {} +
+
+    echo -e "\n${GREEN}Checking semver compliance with cargo semver...${NC}"
+    cargo semver-checks
 
     echo -e "\n${GREEN}Code formatting and linting checks passed successfully!${NC}"
 fi

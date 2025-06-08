@@ -47,8 +47,9 @@ jobs:
           cargo --version
           rustc --version
 
-      - name: Install cargo semver
-        run: cargo install cargo-semver-checks
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-semver-checks
 
       - name: Linting
         run: ./scripts/lint.sh

@@ -35,7 +35,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly
+          toolchain: stable,nightly
           components: rustfmt,clippy
 
       - name: Show Cargo and rustc version

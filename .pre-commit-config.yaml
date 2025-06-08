@@ -18,9 +18,15 @@ repos:
         files: ".*\\.(?:tex|py)$"
   - repo: local
     hooks:
-      - id: lint
+      - id: Lint Rust Code
         name: Run linting script
         language: script
         entry: ./scripts/lint.sh
         files: "\\.rs$"
         pass_filenames: false
+      - id: Lint Shell Scripts
+        name: Run shellcheck
+        language: system
+        entry: shellcheck
+        types: [file]
+        files: "\\.sh$"

@@ -2,17 +2,11 @@ name: actionlint
 
 on:
   pull_request:
-    paths:
-      - ".github/workflows/*.yaml"
   push:
     branches:
       - main
     paths:
       - ".github/workflows/*.yaml"
-
-permissions:
-  contents: read
-  pull-requests: write
 
 jobs:
   action-lint:

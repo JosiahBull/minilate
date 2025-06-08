@@ -1,7 +1,10 @@
 name: Tests
 
 on:
+  pull_request:
   push:
+    branches:
+      - main
     paths:
       - ".cargo/*.toml"
       - ".github/workflows/*.yaml"
@@ -38,6 +41,8 @@ jobs:
         with:
           components: rustfmt
       - uses: dtolnay/rust-toolchain@1.85 # Also update .rust-toolchain.toml and Cargo.toml
+        with:
+          components: clippy
 
       - name: Show Cargo and rustc version
         run: |

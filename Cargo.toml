@@ -19,7 +19,7 @@ exclude = [
     ".gitignore",
     ".pre-commit-config.yaml",
     ".rustfmt.toml",
-    "rennovate.json",
+    "renovate.json",
 ]
 
 [dependencies]
